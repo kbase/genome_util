@@ -23,15 +23,22 @@ module KBaseGenomeUtil {
 
     typedef structure {
     	string gene_id;			/*gene_id is a KBase feature id*/
-    	float e-value;			/*BLAST input parameters*/
-	float identity;			/*BLAST input parameters*/
-	float score;			/*BLAST input parameters*/
+    	float e-value;			/*e-value*/
+	float identity;			/*sequence identity*/
+	float score;			/*BLAST summary score*/
+	string gene_annotation;		/*functional description for a gene*/
     
     } hit;
 
+    typedef structure {
+	string input_squence;		/*the input sequence from the user*/
+	string input_genomes;		/*the genomes used as BLAST database*/
+	float number_of_hits;		/*the number of matched genes*/
+    } meta_info;
     
     typedef structure {
     	list<hit> hits; 		/*a list of BLAST hits*/
+	meta_info info;
     } BLAST_output;
 
 
