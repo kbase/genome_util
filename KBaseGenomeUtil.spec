@@ -31,7 +31,7 @@ module KBaseGenomeUtil {
 
     
     typedef structure {
-    	list<hit> hits; 		/*a list of BLAST hits*/
+    	list<hit> hits; 		/*list of BLAST hit record*/
     } BLAST_output;
 
 
