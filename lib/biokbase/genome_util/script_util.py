@@ -205,7 +205,7 @@ def extract_blast_output(myfile):
 		if re.match(r'^#', line): continue
 		line=line.rstrip()
 		aa=re.split(r'\t',line)
-		tmp={'gene_id':aa[1],'e-value':float(aa[10]),'score':float(aa[11]),'identity':float(aa[2])}
+		tmp={'gene_id':aa[1],'e-value':float(aa[10]),'score':float(aa[11]),'identity':float(aa[2]),'gene_annotation':'not implemented'}
 		info.append(tmp)
 	#info=json.dumps(info)
 	#target=open('tmp_file','w')
