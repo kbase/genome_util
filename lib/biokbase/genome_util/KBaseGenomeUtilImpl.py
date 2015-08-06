@@ -117,7 +117,7 @@ class KBaseGenomeUtil:
         target.close()
       
         user_token=ctx['token']
-        svc_token = Token(user_id=self.__SVC__USER, password=self.__SVC_PASS)
+        svc_token = Token(user_id=self.__SVC_USER, password=self.__SVC_PASS)
         ws_client=Workspace(url=self.__WS_URL, token=user_token)
 
         obj_infos = ws_client.get_object_info_new({"objects": [{'name':params['genome_ids'][0],'workspace': params['ws_id']}]})
