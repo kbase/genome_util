@@ -12,11 +12,7 @@ import script_util
 from biokbase.workspace.client import Workspace
 from biokbase.auth import Token
 
-_KBaseGenomeUtil__DATA_VERSION = "0.1"
-#class KBaseGenomeUtilVersion:
-#    __CODE_VERSION = "0.1"
-#    __DATA_VERSION = "0.1"
-#    _KBaseGenomeUtil__DATA_VERSION = "0.1"
+_KBaseGenomeUtil__DATA_VERSION = "0.2"
 #END_HEADER
 
 
@@ -42,7 +38,7 @@ class KBaseGenomeUtil:
     __SHOCK_URL = 'https://ci.kbase.us/services/shock-api/'
     __BLAST_DIR = 'blast_dir'
     __GENOME_FA = 'genome.fa'
-    __QUERY_FA = 'genome.fa'
+    __QUERY_FA = 'query.fa'
     __INDEX_CMD = 'formatdb'
     __BLAST_CMD = 'blastall'
     __BLAST_OUT = 'result.txt'

@@ -29,7 +29,7 @@ def unzip_files(logger, src_fn, dst_path):
     Extract all index files into an output zip file on disk.
     """
 
-    with ZipFile(src_fn, 'w') as ozip:
+    with ZipFile(src_fn, 'r') as ozip:
         ozip.extractall(dst_path)
 
 
