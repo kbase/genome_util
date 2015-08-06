@@ -228,8 +228,13 @@ class KBaseGenomeUtil:
         #extract the blast output
         res=script_util.extract_blast_output(self.__BLAST_OUT)
         os.remove(self.__BLAST_OUT)
+	num_of_hits=len(res)
 	
-	res1={'hits' : res}
+	metadata=[{'input_genomes':params['genome_ids'][0],'input_sequence':sequence,'number_of_hits':float(num_of_hits)}]
+
+	
+	res1={'hits' : res, 'info':metadata}
+
 	self.__LOGGER.info( "Finished!!!")
 	self.__LOGGER.debug( res1 )
       
