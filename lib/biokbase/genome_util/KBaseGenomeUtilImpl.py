@@ -146,7 +146,7 @@ class KBaseGenomeUtil:
 
 
         target_fn = "%s/%s" %( blast_dir, self.__GENOME_FA)
-        if( len(query_rst) == 0): # no index available
+        if( query_rst is None or len(query_rst) == 0): # no index available
             self.__LOGGER.info( "Downloading genome object from workspace {0}".format(ref_id))
 
             # TODO: make the following procedures to be loop for each genome_ids 
