@@ -26,7 +26,7 @@ module KBaseGenomeUtil {
     	float e-value;			/*e-value*/
 	float identity;			/*sequence identity*/
 	float score;			/*BLAST summary score*/
-	string gene_annotation;		/*functional description for a gene*/
+	list<string> gene_annotation;		/*functional descriptions for a gene*/
     
     } hit;
 
