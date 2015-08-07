@@ -197,7 +197,7 @@ os.system("formatdb -i blast_db/tmp_genome_fasta -p T")
 
 
 
-def extract_blast_output(myfile):
+def extract_blast_output(myfile, anno={}):
 	res=open(myfile).readlines()
 	i=0
 	info=[]
@@ -205,7 +205,9 @@ def extract_blast_output(myfile):
 		if re.match(r'^#', line): continue
 		line=line.rstrip()
 		aa=re.split(r'\t',line)
-		tmp={'gene_id':aa[1],'e-value':float(aa[10]),'score':float(aa[11]),'identity':float(aa[2]),'gene_annotation':'na'}
+                ga = 'na'
+                if(aa[1] in anno): ga = anno[aa[1]]
+		tmp={'gene_id':aa[1],'e-value':float(aa[10]),'score':float(aa[11]),'identity':float(aa[2]),'gene_annotation':ga}
 		info.append(tmp)
 	#info=json.dumps(info)
 	#target=open('tmp_file','w')

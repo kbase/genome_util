@@ -12,7 +12,7 @@ import script_util
 from biokbase.workspace.client import Workspace
 from biokbase.auth import Token
 
-_KBaseGenomeUtil__DATA_VERSION = "0.2"
+_KBaseGenomeUtil__DATA_VERSION = "0.3"
 #END_HEADER
 
 
@@ -38,6 +38,7 @@ class KBaseGenomeUtil:
     __SHOCK_URL = 'https://ci.kbase.us/services/shock-api/'
     __BLAST_DIR = 'blast_dir'
     __GENOME_FA = 'genome.fa'
+    __ANNO_JSON = 'annotation.json'
     __QUERY_FA = 'query.fa'
     __INDEX_CMD = 'formatdb'
     __BLAST_CMD = 'blastall'
@@ -142,6 +143,8 @@ class KBaseGenomeUtil:
 
 
         target_fn = "%s/%s" %( blast_dir, self.__GENOME_FA)
+        anno_fn = "%s/%s" %( blast_dir, self.__ANNO_JSON)
+        g2f = {}
         if( query_rst is None or len(query_rst) == 0): # no index available
             self.__LOGGER.info( "Downloading genome object from workspace {0}".format(ref_id))
 
@@ -163,6 +166,7 @@ class KBaseGenomeUtil:
                       if 'protein_translation' in gene.keys():
                             target.write(">" + gene['id'] + "\n" + gene['protein_translation'] + "\n")
                             check_seq=1
+                      if 'function' in gene: g2f[gene['id']] = gene['function']
                 target.close()
           
           
@@ -174,6 +178,7 @@ class KBaseGenomeUtil:
                       if 'dna_sequence' in gene.keys():
                             target.write(">" + gene['id'] + "\n" + gene['dna_sequence'] + "\n")
                             check_seq=1
+                      if 'function' in gene: g2f[gene['id']] = gene['function']
                 target.close()
             else:
                 self.__LOGGER.error("{0} is not yet supported".format(params['blast_program']))
@@ -182,6 +187,12 @@ class KBaseGenomeUtil:
             if check_seq == 0:
                 self.__LOGGER.error("The genome object does not contain any sequences!")
                 raise Exception("The genome object does not contain any sequences!")
+
+
+            # dump function description
+            with open(anno_fn,'w') as anno:
+                json.dump(g2f, anno)
+            
           
             cmdstring="%s -i %s -p %s" %(self.__INDEX_CMD, target_fn, formatdb_type)
             # TODO: replace it to subprocess.Popen
@@ -213,6 +224,8 @@ class KBaseGenomeUtil:
                                      directory = self.__TEMP_DIR,
                                      token = svc_token)
             script_util.unzip_files(self.__LOGGER, zip_fn, blast_dir)
+            with open(anno_fn,'r') as anno:
+                g2f = json.load(anno)
 
         else:
             self.__LOGGER.error("There are multiple index for the same checksum!")
@@ -226,7 +239,7 @@ class KBaseGenomeUtil:
         os.remove(query_fn)
       
         #extract the blast output
-        res=script_util.extract_blast_output(self.__BLAST_OUT)
+        res=script_util.extract_blast_output(self.__BLAST_OUT, anno=g2f)
         os.remove(self.__BLAST_OUT)
 	num_of_hits=len(res)
 	
