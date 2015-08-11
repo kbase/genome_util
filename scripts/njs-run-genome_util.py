@@ -21,10 +21,8 @@ from biokbase.genome_util.KBaseGenomeUtilImpl import KBaseGenomeUtil
 
 DEPLOY = 'KB_DEPLOYMENT_CONFIG'
 SERVICE = 'KB_SERVICE_NAME'
-TOP = 'KB_TOP'
 DEPLOYMENT = 'KB_TARGET'
-
-# Note that the error fields do not match the 2.0 JSONRPC spec
+TOP = 'KB_TOP'
 
 def get_config_file(default = None):
     path = environ.get(DEPLOY, default)
