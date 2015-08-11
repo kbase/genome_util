@@ -1,4 +1,8 @@
-
+KB_TOP ?= /kb/dev_container
+TARGET ?= /kb/deployment
+DIR = $(shell pwd)
+LBIN_DIR = bin
+LIB_DIR = lib
 MODULE = genome_util
 MODULE_CAPS = KBaseGenomeUtil
 
@@ -10,16 +14,11 @@ GITCOMMIT := $(shell git rev-parse --short HEAD)
 TAGS := $(shell git tag --contains $(GITCOMMIT))
 
 TOP_DIR = $(shell python -c "import os.path as p; print p.abspath('../..')")
-
 TOP_DIR_NAME = $(shell basename $(TOP_DIR))
 
-DIR = $(shell pwd)
-
-LIB_DIR = lib
-
-LBIN_DIR = bin
 
 EXECUTABLE_SCRIPT_NAME = run_$(MODULE_CAPS).sh
+NJS_SCRIPT_NAME = njs-run-$(MODULE)
 
 
 default: compile-kb-module build-executable-script-python
@@ -43,6 +42,14 @@ build-executable-script-python: setup-local-dev-kb-py-libs
 	echo 'python $(DIR)/lib/biokbase/$(MODULE)/$(MODULE_CAPS).py $$1 $$2 $$3' \
 		>> $(LBIN_DIR)/$(EXECUTABLE_SCRIPT_NAME)
 	chmod +x $(LBIN_DIR)/$(EXECUTABLE_SCRIPT_NAME)
+#
+	echo '#!/bin/bash' > $(LBIN_DIR)/$(NJS_SCRIPT_NAME)
+	echo 'export KB_DEPLOYMENT_CONFIG="$(DIR)/deploy.cfg"' >> $(LBIN_DIR)/$(NJS_SCRIPT_NAME)
+	echo 'export KB_SERVICE_NAME="$(MODULE_CAPS)"' >> $(LBIN_DIR)/$(NJS_SCRIPT_NAME)
+	echo 'export PYTHONPATH="$(DIR)/$(LIB_DIR)"' >> $(LBIN_DIR)/$(NJS_SCRIPT_NAME)
+	echo 'python $(DIR)/scripts/njs-run-$(MODULE).py "$$@"' \
+		>> $(LBIN_DIR)/$(NJS_SCRIPT_NAME)
+	chmod +x $(LBIN_DIR)/$(NJS_SCRIPT_NAME)
 ifeq ($(TOP_DIR_NAME), dev_container)
 	cp $(LBIN_DIR)/$(EXECUTABLE_SCRIPT_NAME) $(TOP_DIR)/bin/.
 endif
@@ -71,7 +78,6 @@ include $(TOP_DIR)/tools/Makefile.common
 include $(TOP_DIR)/tools/Makefile.common.rules
 
 DEPLOY_RUNTIME ?= /kb/runtime
-TARGET ?= /kb/deployment
 #SERVICE_DIR ?= $(TARGET)/services/$(MODULE)
 
 deploy: deploy-scripts deploy-cfg
@@ -92,11 +98,21 @@ deploy-executable-script:
 	echo '#!/bin/bash' > $(TARGET)/bin/$(EXECUTABLE_SCRIPT_NAME)
 	echo 'export KB_DEPLOYMENT_CONFIG="$(TARGET)/deployment.cfg"' >> $(TARGET)/bin/$(EXECUTABLE_SCRIPT_NAME)
 	echo 'export KB_SERVICE_NAME="$(MODULE_CAPS)"' >> $(TARGET)/bin/$(EXECUTABLE_SCRIPT_NAME)
-	echo 'export KB_RUNTIME=$(DEPLOY_RUNTIME)' >> $(TARGET)/bin/$(EXECUTABLE_SCRIPT_NAME)
+	echo 'export KB_RUNTIME="$(DEPLOY_RUNTIME)"' >> $(TARGET)/bin/$(EXECUTABLE_SCRIPT_NAME)
 	echo 'export PYTHONPATH="$(TARGET)/lib"' >> $(TARGET)/bin/$(EXECUTABLE_SCRIPT_NAME)
 	echo 'python $(TARGET)/lib/biokbase/$(MODULE)/$(MODULE_CAPS).py $$1 $$2 $$3' \
 		>> $(TARGET)/bin/$(EXECUTABLE_SCRIPT_NAME)
 	chmod +x $(TARGET)/bin/$(EXECUTABLE_SCRIPT_NAME)
+#
+	rsync -vrh --include *.py --exclude *.bak* scripts/ $(TARGET)/pybin/.
+	echo '#!/bin/bash' > $(TARGET)/bin/$(NJS_SCRIPT_NAME)
+	echo 'export KB_DEPLOYMENT_CONFIG="$(TARGET)/deployment.cfg"' >> $(TARGET)/bin/$(NJS_SCRIPT_NAME)
+	echo 'export KB_SERVICE_NAME="$(MODULE_CAPS)"' >> $(TARGET)/bin/$(NJS_SCRIPT_NAME)
+	echo 'export KB_RUNTIME="$(DEPLOY_RUNTIME)"' >> $(TARGET)/bin/$(NJS_SCRIPT_NAME)
+	echo 'export PYTHONPATH="$(TARGET)/lib"' >> $(TARGET)/bin/$(NJS_SCRIPT_NAME)
+	echo 'python $(TARGET)/pybin/njs-run-$(MODULE).py "$$@" ' \
+		>> $(TARGET)/bin/$(NJS_SCRIPT_NAME)
+	chmod +x $(TARGET)/bin/$(NJS_SCRIPT_NAME)
 
 deploy-service-scripts:
 

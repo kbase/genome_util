@@ -5,6 +5,8 @@ import re
 import io
 import urllib
 import requests
+import logging
+import time
 from requests_toolbelt import MultipartEncoder
 import subprocess
 from zipfile import ZipFile
@@ -12,6 +14,48 @@ from os import listdir
 from os.path import isfile, join
 
 from biokbase.workspace.client import Workspace
+
+def stderrlogger(name, level=logging.INFO):
+    """
+    Return a standard python logger with a stderr handler attached and using a prefix
+    format that will make logging consistent between scripts.
+    """
+    
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    
+    # send messages to sys.stderr
+    streamHandler = logging.StreamHandler(sys.stderr)
+
+    formatter = logging.Formatter("%(asctime)s - %(filename)s - %(lineno)d - %(levelname)s - %(message)s")
+    formatter.converter = time.gmtime
+    streamHandler.setFormatter(formatter)
+
+    logger.addHandler(streamHandler)
+    
+    return logger
+
+
+def stdoutlogger(name, level=logging.INFO):
+    """
+    Return a standard python logger with a stdout handler attached and using a prefix
+    format that will make logging consistent between scripts.
+    """
+    
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    
+    # send messages to sys.stderr
+    streamHandler = logging.StreamHandler(sys.stdout)
+
+    formatter = logging.Formatter("%(asctime)s - %(filename)s - %(lineno)d - %(levelname)s - %(message)s")
+    formatter.converter = time.gmtime
+    streamHandler.setFormatter(formatter)
+
+    logger.addHandler(streamHandler)
+    
+    return logger
+
 
 
 def zip_files(logger, src_path, output_fn):
