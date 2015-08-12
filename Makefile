@@ -85,6 +85,7 @@ deploy: deploy-scripts deploy-cfg
 deploy-client: deploy-scripts deploy-cfg
 
 deploy-scripts: deploy-libs deploy-executable-script deploy-cfg
+	bash $(DIR)/deps/pylib.sh
 
 deploy-service: deploy-libs deploy-executable-script deploy-service-scripts deploy-cfg
 
