@@ -47,7 +47,7 @@ build-executable-script-python: setup-local-dev-kb-py-libs
 	echo 'export KB_DEPLOYMENT_CONFIG="$(DIR)/deploy.cfg"' >> $(LBIN_DIR)/$(NJS_SCRIPT_NAME)
 	echo 'export KB_SERVICE_NAME="$(MODULE_CAPS)"' >> $(LBIN_DIR)/$(NJS_SCRIPT_NAME)
 	echo 'export PYTHONPATH="$(DIR)/$(LIB_DIR)"' >> $(LBIN_DIR)/$(NJS_SCRIPT_NAME)
-	echo 'python $(DIR)/scripts/njs-run-$(MODULE).py "$$@"' \
+	echo 'python $(DIR)/njs/njs-run-$(MODULE).py "$$@"' \
 		>> $(LBIN_DIR)/$(NJS_SCRIPT_NAME)
 	chmod +x $(LBIN_DIR)/$(NJS_SCRIPT_NAME)
 ifeq ($(TOP_DIR_NAME), dev_container)
@@ -105,7 +105,7 @@ deploy-executable-script:
 		>> $(TARGET)/bin/$(EXECUTABLE_SCRIPT_NAME)
 	chmod +x $(TARGET)/bin/$(EXECUTABLE_SCRIPT_NAME)
 #
-	rsync -vrh --include *.py --exclude *.bak* scripts/ $(TARGET)/pybin/.
+	rsync -vrh --include *.py --exclude *.bak* njs/ $(TARGET)/pybin/.
 	echo '#!/bin/bash' > $(TARGET)/bin/$(NJS_SCRIPT_NAME)
 	echo 'export KB_DEPLOYMENT_CONFIG="$(TARGET)/deployment.cfg"' >> $(TARGET)/bin/$(NJS_SCRIPT_NAME)
 	echo 'export KB_SERVICE_NAME="$(MODULE_CAPS)"' >> $(TARGET)/bin/$(NJS_SCRIPT_NAME)
