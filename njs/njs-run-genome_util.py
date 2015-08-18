@@ -87,7 +87,7 @@ def run_svc(service_url, module, command, param_file, token=None, level=logging.
 
     if token is None:
         token = environ.get('KB_AUTH_TOKEN', None)
-        logger.error("Could not retrieve user token from KB_AUTH_TOKEN")
+        if token is None: logger.error("Could not retrieve user token from KB_AUTH_TOKEN")
 
     #TODO: May add full call ctx
     try:
