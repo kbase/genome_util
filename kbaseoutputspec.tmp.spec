@@ -74,9 +74,7 @@ typedef structure {
 }Iteration;
 
 
-typedef structure {
- Iteration_hits Iteration_hits;
-}Iteration;
+
 
 
 typedef structure {
