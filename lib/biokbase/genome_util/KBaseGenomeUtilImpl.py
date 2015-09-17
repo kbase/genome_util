@@ -236,17 +236,22 @@ class KBaseGenomeUtil:
         cmdstring="%s -p %s -i %s -m 9 -o %s -d %s -e %s" % (self.__BLAST_CMD, params['blast_program'], query_fn, self.__BLAST_OUT, target_fn, params['e-value'])
         # TODO: replace it to subprocess.Popen
         os.system(cmdstring)
+	os.system("perl lib/biokbase/genome_util/xml2kbaseblastjson.pl result.txt > blastoutput_new.json")
+	with open('blastoutput_new.json', 'r') as myfile:
+		res1 = myfile.read()
+
         os.remove(query_fn)
       
         #extract the blast output
-        res=script_util.extract_blast_output(self.__BLAST_OUT, anno=g2f)
-        os.remove(self.__BLAST_OUT)
-	num_of_hits=len(res)
+# res=script_util.extract_blast_output(self.__BLAST_OUT, anno=g2f)
+        
+	os.remove(self.__BLAST_OUT)
+#num_of_hits=len(res)
 	
-	metadata=[{'input_genomes':params['genome_ids'][0],'input_sequence':sequence,'number_of_hits':float(num_of_hits)}]
+#metadata=[{'input_genomes':params['genome_ids'][0],'input_sequence':sequence,'number_of_hits':float(num_of_hits)}]
 
 	
-	res1={'hits' : res, 'info':metadata}
+#res1={'hits' : res, 'info':metadata}
 
 	self.__LOGGER.info( "Finished!!!")
 	self.__LOGGER.debug( res1 )
@@ -256,7 +261,7 @@ class KBaseGenomeUtil:
         res= ws_client.save_objects(
             {"workspace":params['ws_id'],
             "objects": [{
-                "type":"GenomeUtil.BLAST_output",
+                "type":"GenomeUtil.BlastOutput",
                 "data":res1,
                 "name":params['output_name']}
             ]})
