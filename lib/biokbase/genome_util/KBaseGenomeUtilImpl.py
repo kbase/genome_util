@@ -233,7 +233,7 @@ class KBaseGenomeUtil:
 
         self.__LOGGER.info( "Searching...")
         #blast search
-        cmdstring="%s -p %s -i %s -m 9 -o %s -d %s -e %s" % (self.__BLAST_CMD, params['blast_program'], query_fn, self.__BLAST_OUT, target_fn, params['e-value'])
+        cmdstring="%s -p %s -i %s -m 7 -o %s -d %s -e %s" % (self.__BLAST_CMD, params['blast_program'], query_fn, self.__BLAST_OUT, target_fn, params['e-value'])
         # TODO: replace it to subprocess.Popen
         os.system(cmdstring)
 	os.system("perl lib/biokbase/genome_util/xml2kbaseblastjson.pl result.txt > blastoutput_new.json")
@@ -245,7 +245,7 @@ class KBaseGenomeUtil:
         #extract the blast output
 # res=script_util.extract_blast_output(self.__BLAST_OUT, anno=g2f)
         
-	os.remove(self.__BLAST_OUT)
+#os.remove(self.__BLAST_OUT)
 #num_of_hits=len(res)
 	
 #metadata=[{'input_genomes':params['genome_ids'][0],'input_sequence':sequence,'number_of_hits':float(num_of_hits)}]
@@ -266,7 +266,7 @@ class KBaseGenomeUtil:
                 "name":params['output_name']}
             ]})
         
-
+	print res1
         returnVal = res1
         #END blast_against_genome
 
@@ -274,18 +274,5 @@ class KBaseGenomeUtil:
         if not isinstance(returnVal, dict):
             raise ValueError('Method blast_against_genome return value ' +
                              'returnVal is not type dict as required.')
-        # return the results
-        return [returnVal]
-
-    def compare_genome_groups(self, ctx, input):
-        # ctx is the context object
-        # return variables are: returnVal
-        #BEGIN compare_genome_groups
-        #END compare_genome_groups
-
-        # At some point might do deeper type checking...
-        if not isinstance(returnVal, basestring):
-            raise ValueError('Method compare_genome_groups return value ' +
-                             'returnVal is not type basestring as required.')
         # return the results
         return [returnVal]
