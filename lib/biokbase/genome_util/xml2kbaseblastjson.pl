@@ -1,5 +1,8 @@
 use JSON;
 use XML::Simple;
+
+#usage -- perl xml2kbaseblastjson.pl blast.xml >blast.json
+
 my $file = $ARGV[0];
 
 #system ("blastall -i query -d xm.fa -p blastp -e 1e-5 -m 7 >output.txt");
