@@ -55,9 +55,7 @@ typedef structure {
 
 list <hit_details> Hit;
 
-typedef structure {
-  Hit Hit;
-}
+
 
 
 typedef structure {
