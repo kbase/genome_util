@@ -60,7 +60,7 @@ typedef structure {
 }
 
 
-typedef structure 
+typedef structure {
     Hit Hit;
     string Iteration_iter-num;
     string Iteration_query-ID;
@@ -69,12 +69,12 @@ typedef structure
 }Iteration_hits;
 
 
-typedef structure 
+typedef structure {
  Iteration_hits Iteration_hits;
 }Iteration;
 
 
-typedef structure 
+typedef structure {
  Iteration_hits Iteration_hits;
 }Iteration;
 
