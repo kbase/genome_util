@@ -235,10 +235,11 @@ class KBaseGenomeUtil:
         #blast search
         cmdstring="%s -p %s -i %s -m 7 -o %s -d %s -e %s" % (self.__BLAST_CMD, params['blast_program'], query_fn, self.__BLAST_OUT, target_fn, params['e-value'])
         # TODO: replace it to subprocess.Popen
+        print cmdstring
         os.system(cmdstring)
 	os.system("perl lib/biokbase/genome_util/xml2kbaseblastjson.pl result.txt > blastoutput_new.json")
 	with open('blastoutput_new.json', 'r') as myfile:
-		res1 = myfile.read()
+		res1 = json.load(myfile)
 
         os.remove(query_fn)
       
@@ -266,7 +267,7 @@ class KBaseGenomeUtil:
                 "name":params['output_name']}
             ]})
         
-	print res1
+	#print res1
         returnVal = res1
         #END blast_against_genome
 
