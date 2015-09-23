@@ -163,6 +163,7 @@ class KBaseGenomeUtil:
                 #extract protein sequences from the genome object
                 target=open(target_fn,'w')
                 for gene in genome['data']['features']:
+                      #>kb.g.1234.CDS.1234#At1g3333 amalase...
                       if 'protein_translation' in gene.keys():
                             target.write(">" + gene['id'] + "\n" + gene['protein_translation'] + "\n")
                             check_seq=1
@@ -187,6 +188,9 @@ class KBaseGenomeUtil:
             if check_seq == 0:
                 self.__LOGGER.error("The genome object does not contain any sequences!")
                 raise Exception("The genome object does not contain any sequences!")
+
+
+            
 
 
             # dump function description
@@ -234,9 +238,33 @@ class KBaseGenomeUtil:
         self.__LOGGER.info( "Searching...")
         #blast search
         cmdstring="%s -p %s -i %s -m 7 -o %s -d %s -e %s" % (self.__BLAST_CMD, params['blast_program'], query_fn, self.__BLAST_OUT, target_fn, params['e-value'])
+
+        if 'gap_opening_penalty' in params:
+          cmdstring += " -G %s" %(params['gap_opening_penalty'])
+
+        if 'gap_extension_penalty' in params:
+          cmdstring += " -E %s" %(params['gap_extension_penalty'])
+
+        if 'nucleotide_match_reward' in params:
+          cmdstring += " -r %s" %(params['nucleotide_match_reward'])
+
+        if 'nucleotide_mismatch_penalty' in params:
+          cmdstring += " -q %s" %(params['nucleotide_mismatch_penalty'])
+
+        if 'word_size' in params:
+          cmdstring += " -W %s" %(params['word_size'])
+
+        # TODO: clarify it with sunita
+        #if 'maximum_score' in params:
+        #  cmdstring += " -W %s" %(params['maximum_score'])
+
+        if 'maximum_alignment_2show' in params:
+          cmdstring += " -b %s" %(params['maximum_alignment_2show'])
+
         # TODO: replace it to subprocess.Popen
         print cmdstring
         os.system(cmdstring)
+        # TODO: Convert the following Perl script to python library code
 	os.system("perl lib/biokbase/genome_util/xml2kbaseblastjson.pl result.txt > blastoutput_new.json")
 	with open('blastoutput_new.json', 'r') as myfile:
 		res1 = json.load(myfile)
