@@ -261,6 +261,9 @@ class KBaseGenomeUtil:
         if 'maximum_alignment_2show' in params:
           cmdstring += " -b %s" %(params['maximum_alignment_2show'])
 
+        if 'substitution_matrix' in params and params['substitution_matrix'] != 'Default':
+          cmdstring += " -M %s" %(params['substitution_matrix'])
+
         # TODO: replace it to subprocess.Popen
         print cmdstring
         os.system(cmdstring)
