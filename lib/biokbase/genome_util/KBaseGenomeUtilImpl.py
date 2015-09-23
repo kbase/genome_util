@@ -264,6 +264,21 @@ class KBaseGenomeUtil:
         if 'substitution_matrix' in params and params['substitution_matrix'] != 'Default':
           cmdstring += " -M %s" %(params['substitution_matrix'])
 
+        if 'mega_blast' in params:
+          cmdstring += " -n %s" %(params['mega_blast'])
+
+        if 'gapped_alignment' in params:
+          cmdstring += " -g %s" %(params['gapped_alignment'])
+
+        if 'filter_query_seq' in params:
+          cmdstring += " -F %s" %(params['filter_query_seq'])
+
+        if 'extending_hits' in params:
+          cmdstring += " -f %s" %(params['extending_hits'])
+
+        if 'maximum_seq_2show' in params:
+          cmdstring += " -v %s" %(params['maximum_seq_show'])
+
         # TODO: replace it to subprocess.Popen
         print cmdstring
         os.system(cmdstring)
