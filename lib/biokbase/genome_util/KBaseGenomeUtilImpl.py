@@ -283,7 +283,7 @@ class KBaseGenomeUtil:
         print cmdstring
         os.system(cmdstring)
         # TODO: Convert the following Perl script to python library code
-	os.system("perl lib/biokbase/genome_util/xml2kbaseblastjson.pl result.txt > blastoutput_new.json")
+	os.system("xml2kbaseblastjson result.txt > blastoutput_new.json")
 	with open('blastoutput_new.json', 'r') as myfile:
 		res1 = json.load(myfile)
 
