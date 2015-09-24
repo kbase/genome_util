@@ -97,6 +97,7 @@ class KBaseGenomeUtil:
         # return variables are: returnVal
         #BEGIN blast_against_genome
 
+        self.__LOGGER.info( "Preparing FA")
         if len(params['query']) > 5:
             sequence=params['query']
         else:
@@ -108,9 +109,14 @@ class KBaseGenomeUtil:
         #print "generate input file for query sequence\n"
         query_fn = "%s/%s" %(self.__TEMP_DIR, self.__QUERY_FA)
         target=open(query_fn,'w')
-        target.write(">")
-        target.write("input_seq\n")
-        target.write(sequence)
+        if sequence.startswith(">"):
+          target.write(sequence)
+        else:
+          seqes = sequence.split("\n")
+          pprint(seqes)
+          for i in range(len(seqes)):
+            target.write(">query_seq_%d\n" %(i))
+            target.write(seqes[i])
         target.close()
       
         user_token=ctx['token']
