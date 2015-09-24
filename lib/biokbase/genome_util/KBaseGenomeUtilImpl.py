@@ -277,7 +277,7 @@ class KBaseGenomeUtil:
           cmdstring += " -f %s" %(params['extending_hits'])
 
         if 'maximum_seq_2show' in params:
-          cmdstring += " -v %s" %(params['maximum_2seq_show'])
+          cmdstring += " -v %s" %(params['maximum_seq_2show'])
 
         # TODO: replace it to subprocess.Popen
         print cmdstring
