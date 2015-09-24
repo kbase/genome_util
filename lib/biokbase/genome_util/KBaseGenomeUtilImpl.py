@@ -164,10 +164,15 @@ class KBaseGenomeUtil:
                 target=open(target_fn,'w')
                 for gene in genome['data']['features']:
                       #>kb.g.1234.CDS.1234#At1g3333 amalase...
+                      function = ""
+                      aliases = ""
+                      if 'function' in gene: 
+                          g2f[gene['id']] = gene['function']
+                          function = gene['function']
+                      if 'aliases' in gene: aliases = ",".join(gene['aliases'])
                       if 'protein_translation' in gene.keys():
-                            target.write(">" + gene['id'] + "\n" + gene['protein_translation'] + "\n")
+                            target.write(">%s#%s %s\n%s\n" % (gene['id'], aliases, function, gene['protein_translation']))
                             check_seq=1
-                      if 'function' in gene: g2f[gene['id']] = gene['function']
                 target.close()
           
           
@@ -176,8 +181,14 @@ class KBaseGenomeUtil:
                 #extract dna sequence from the genome object
                 target=open(target_fn,'w')
                 for gene in genome['data']['features']:
+                      function = ""
+                      aliases = ""
+                      if 'function' in gene: 
+                          g2f[gene['id']] = gene['function']
+                          function = gene['function']
+                      if 'aliases' in gene: aliases = ",".join(gene['aliases'])
                       if 'dna_sequence' in gene.keys():
-                            target.write(">" + gene['id'] + "\n" + gene['dna_sequence'] + "\n")
+                            target.write(">%s#%s %s\n%s\n" % (gene['id'], aliases, function, gene['dna_sequence']))
                             check_seq=1
                       if 'function' in gene: g2f[gene['id']] = gene['function']
                 target.close()
@@ -253,10 +264,6 @@ class KBaseGenomeUtil:
 
         if 'word_size' in params:
           cmdstring += " -W %s" %(params['word_size'])
-
-        # TODO: clarify it with sunita
-        #if 'maximum_score' in params:
-        #  cmdstring += " -W %s" %(params['maximum_score'])
 
         if 'maximum_alignment_2show' in params:
           cmdstring += " -b %s" %(params['maximum_alignment_2show'])
