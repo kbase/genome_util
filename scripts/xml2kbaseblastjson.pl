@@ -41,9 +41,8 @@ sub fix_iterations {
 
 
     foreach my $iteration (@$iterations){
-
+        $iteration->{Iteration_hits}{Hit} = [$iteration->{Iteration_hits}{Hit}] if( ref($iteration->{Iteration_hits}{Hit}) ne "ARRAY");
         my $hits = $iteration->{Iteration_hits}{Hit};
-        $hits = [$hits] if( ref($hits) ne "ARRAY");
         foreach my $hit (@$hits){
             &fix_hsp($hit);
         }
