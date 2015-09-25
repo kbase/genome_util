@@ -1,5 +1,6 @@
 use JSON;
 use XML::Simple;
+use Data::Dumper;
 
 #usage -- perl xml2kbaseblastjson.pl blast.xml >blast.json
 
@@ -30,33 +31,34 @@ print $jsonString;
 
 
 sub fix_iterations {
-my ($dataXML) = @_;
-my $iterations = $dataXML->{BlastOutput}{BlastOutput_iterations}{Iteration};
-  if(ref($iterations) eq 'HASH'){
-    $dataXML->{BlastOutput}{BlastOutput_iterations}{Iteration} = [$dataXML->{BlastOutput}{BlastOutput_iterations}{Iteration}];
-  }
+    my ($dataXML) = @_;
+    my $iterations = $dataXML->{BlastOutput}{BlastOutput_iterations}{Iteration};
+    if(ref($iterations) eq 'HASH'){
+        $dataXML->{BlastOutput}{BlastOutput_iterations}{Iteration} = [$dataXML->{BlastOutput}{BlastOutput_iterations}{Iteration}];
+    }
 
-my $iterations = $dataXML->{BlastOutput}{BlastOutput_iterations}{Iteration};
+    my $iterations = $dataXML->{BlastOutput}{BlastOutput_iterations}{Iteration};
 
 
-foreach my $iteration (@$iterations){
+    foreach my $iteration (@$iterations){
 
-    my $hits = $iteration->{Iteration_hits}{Hit};
-   foreach my $hit (@$hits){
-      &fix_hsp($hit);
-     }
-}
+        my $hits = $iteration->{Iteration_hits}{Hit};
+        $hits = [$hits] if( ref($hits) ne "ARRAY");
+        foreach my $hit (@$hits){
+            &fix_hsp($hit);
+        }
+    }
 }
 
 
 
 sub fix_hsp {
-my ($hit) = @_;
+    my ($hit) = @_;
 
-  my $hsp = $hit->{Hit_hsps}{Hsp};
-  if(ref($hsp) eq 'HASH'){
-	  $hit->{Hit_hsps}{Hsp}=[$hit->{Hit_hsps}{Hsp}];
-  } 
+    my $hsp = $hit->{Hit_hsps}{Hsp};
+    if(ref($hsp) eq 'HASH'){
+        $hit->{Hit_hsps}{Hsp}=[$hit->{Hit_hsps}{Hsp}];
+    } 
 }
 
 

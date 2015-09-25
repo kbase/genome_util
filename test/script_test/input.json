@@ -3,18 +3,9 @@
 	"method":"KBaseGenomeUtil.blast_against_genome",
 	"context":null,
 	"params":[
-		{
-			"query":"cgctggcggccttggaagaagagttcgatgtgttcgtggtgaccgatgc",
-			"genome_ids":["kb|g.208505"],
-			"e-value": "1",
-			"coverage":"0.00000000005",
-			"identity":"0.00000003",
-			"score":"50",
-			"blast_program":"blastn",
-			"ws_id":"kbasetest:1437674347386",
-			"output_name":"test_BLASToutput_DNA"
-		
-		}
+{"blast_program": "blastp", "e-value": "0.05", "extending_hits": "11", "filter_query_seq": "T", "gap_extension_penalty": "1", "gap_opening_penalty": "11", "gapped_alignment": "T", 
+"target_seqs": "MKTPNGQTASWPAPAAPDMRRSVVAPDLVVEGEMSSAGPVDVQGTVVGGVEAPEVVVAEAGRIEGSVTAHDLAVLGRISGSVSARQVRLGPSAVVQAHVLHERIAIEAGAELDGRLQRKAMKTPNGQTASWPAPAAPDMRRSVVAPDLVVEGEMSSAGPVDVQGTVVGGVEAPEVVVAEAGRIEGSVTAHDLAVLGRISGSVSARQVRLGPSAVVQAHVLHERIAIEAGAELDGRLQRKA", 
+"maximum_alignment_2show": "15", "maximum_score": "25", "maximum_seq_2show": "500", "output_name": "balst_output_1", "query": "MKTPNGQTASWPAPAAPDMRRSVVAPDLVVEGEMSSAGPVDVQGTVVGGVEAPEVVVAEAGRIEGSVTAHDLAVLGRISGSVSARQVRLGPSAVVQAHVLHERIAIEAGAELDGRLQRKA", "substitution_matrix": "Default", "word_size": "3", "ws_id": "pranjan77:1442854662472"}
 	]
 
 
