@@ -212,8 +212,8 @@ class KBaseGenomeUtil:
                     target=open(target_fn,'w')
                     for gene in genome['data']['features']:
                           #>kb.g.1234.CDS.1234#At1g3333 amalase...
-                          function = ""
-                          aliases = ""
+                          function = "NA"
+                          aliases = "NA"
                           if 'function' in gene: 
                               g2f[gene['id']] = gene['function']
                               function = gene['function']
