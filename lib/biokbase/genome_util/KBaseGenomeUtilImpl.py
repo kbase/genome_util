@@ -12,7 +12,7 @@ import script_util
 from biokbase.workspace.client import Workspace
 from biokbase.auth import Token
 
-_KBaseGenomeUtil__DATA_VERSION = "0.4"
+_KBaseGenomeUtil__DATA_VERSION = "0.5"
 #END_HEADER
 
 
@@ -160,7 +160,7 @@ class KBaseGenomeUtil:
             else:
                 self.__LOGGER.error("{0} is not yet supported".format(params['blast_program']))
                 raise Exception("{0} is not yet supported".format(params['blast_program']))
-            cmdstring="%s -i %s -p %s" %(self.__INDEX_CMD, target_fn, formatdb_type)
+            cmdstring="%s -i %s -p %s -o T" %(self.__INDEX_CMD, target_fn, formatdb_type)
             # TODO: replace it to subprocess.Popen
             os.system(cmdstring)
 
@@ -219,7 +219,7 @@ class KBaseGenomeUtil:
                               function = gene['function']
                           if 'aliases' in gene: aliases = ",".join(gene['aliases'])
                           if 'protein_translation' in gene.keys():
-                                target.write(">%s#%s %s\n%s\n" % (gene['id'], aliases, function, gene['protein_translation']))
+                                target.write(">%s#%s#%s\n%s\n" % (gene['id'], aliases, function, gene['protein_translation']))
                                 check_seq=1
                     target.close()
               
@@ -236,7 +236,7 @@ class KBaseGenomeUtil:
                               function = gene['function']
                           if 'aliases' in gene: aliases = ",".join(gene['aliases'])
                           if 'dna_sequence' in gene.keys():
-                                target.write(">%s#%s %s\n%s\n" % (gene['id'], aliases, function, gene['dna_sequence']))
+                                target.write(">%s#%s#%s\n%s\n" % (gene['id'], aliases, function, gene['dna_sequence']))
                                 check_seq=1
                           if 'function' in gene: g2f[gene['id']] = gene['function']
                     target.close()
@@ -342,7 +342,7 @@ class KBaseGenomeUtil:
 	with open('blastoutput_new.json', 'r') as myfile:
 		res1 = json.load(myfile)
 
-        os.remove(query_fn)
+        #os.remove(query_fn)
       
         #extract the blast output
 # res=script_util.extract_blast_output(self.__BLAST_OUT, anno=g2f)
