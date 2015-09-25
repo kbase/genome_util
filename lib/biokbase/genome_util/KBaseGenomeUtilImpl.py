@@ -12,7 +12,7 @@ import script_util
 from biokbase.workspace.client import Workspace
 from biokbase.auth import Token
 
-_KBaseGenomeUtil__DATA_VERSION = "0.3"
+_KBaseGenomeUtil__DATA_VERSION = "0.4"
 #END_HEADER
 
 
