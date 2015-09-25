@@ -49,6 +49,13 @@ class KBaseGenomeUtil:
     __LOGGER = None
     __ERR_LOGGER = None
 
+
+    __INDEX_TYPE = {'blastp' : 'protein_db',
+                    'blastx' : 'protein_db',
+                    'blastn' : 'transcript_db',
+                    'tblastn' : 'transcript_db',
+                    'tblastx' : 'transcript_db'}
+
     #END_CLASS_HEADER
 
     # config contains contents of config file in a hash or None if it couldn't
@@ -146,10 +153,13 @@ class KBaseGenomeUtil:
             with open(anno_fn,'w') as anno:
                 json.dump({}, anno)
 
-            if(params['blast_program'] == 'blastp'):
+            if(self.__INDEX_TYPE[params['blast_program']]  == 'protein_db'):
                 formatdb_type='T'
-            if(params['blast_program'] == 'blastn'):
+            elif(self.__INDEX_TYPE[params['blast_program']]  == 'transcript_db'):
                 formatdb_type='F'
+            else:
+                self.__LOGGER.error("{0} is not yet supported".format(params['blast_program']))
+                raise Exception("{0} is not yet supported".format(params['blast_program']))
             cmdstring="%s -i %s -p %s" %(self.__INDEX_CMD, target_fn, formatdb_type)
             # TODO: replace it to subprocess.Popen
             os.system(cmdstring)
@@ -170,7 +180,7 @@ class KBaseGenomeUtil:
                 condition = {'ws_obj_chks' : obj_chks, 
                              'service' : 'genome_util', 
                              'svc_data_version' : __DATA_VERSION, 
-                             'blast_program' : params['blast_program']})
+                             'index_type' : self.__INDEX_TYPE[params['blast_program']]})
            
             blast_dir = "%s/%s" %(self.__TEMP_DIR, self.__BLAST_DIR)
             if os.path.exists(blast_dir):
@@ -196,7 +206,7 @@ class KBaseGenomeUtil:
                 self.__LOGGER.info( "Indexing genome\n")
                 # Dump genome sequences
                 check_seq=0
-                if(params['blast_program'] == 'blastp'):
+                if(self.__INDEX_TYPE[params['blast_program']]  == 'protein_db'):
                     formatdb_type='T'
                     #extract protein sequences from the genome object
                     target=open(target_fn,'w')
@@ -214,7 +224,7 @@ class KBaseGenomeUtil:
                     target.close()
               
               
-                elif(params['blast_program'] == 'blastn'):
+                elif(self.__INDEX_TYPE[params['blast_program']]  == 'transcript_db'):
                     formatdb_type='F'
                     #extract dna sequence from the genome object
                     target=open(target_fn,'w')
@@ -264,7 +274,7 @@ class KBaseGenomeUtil:
                                        "ws_obj_chks" : obj_chks,
                                        'service' : 'genome_util', 
                                        'svc_data_version' : __DATA_VERSION, 
-                                       'blast_program' : params['blast_program']
+                                       'index_type' : self.__INDEX_TYPE[params['blast_program']]
                                      })
            
             elif (len(query_rst) == 1): # index is available
