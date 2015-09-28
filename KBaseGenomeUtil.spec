@@ -1,4 +1,4 @@
-module KBaseGenomeUtil {
+module GenomeUtil {
 
 
     /*genome_id is a KBase genome object id*/
@@ -86,16 +86,27 @@ typedef structure {
   Hit_hsps Hit_hsps;
 }hit_details;
 
+
+
+/*
+@optional hit_details
+*/
 typedef list <hit_details> Hit;
 
 
 
 
+/*
+@optional Hit
+*/
 typedef structure {
     Hit Hit;
 }Iteration_hits;
 
 
+/*
+@optional Iteration_hits Iteration_iter-num Iteration_query-ID Iteration_query-def Iteration_query-len
+*/
 typedef structure {
     Iteration_hits Iteration_hits;
     string Iteration_iter-num;
