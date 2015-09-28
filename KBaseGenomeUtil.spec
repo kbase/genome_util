@@ -1,4 +1,4 @@
-module GenomeUtil {
+module KBaseGenomeUtil {
 
 
     /*genome_id is a KBase genome object id*/
