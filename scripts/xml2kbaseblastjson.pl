@@ -41,6 +41,10 @@ sub fix_iterations {
 
 
     foreach my $iteration (@$iterations){
+        if(!defined $iteration->{Iteration_hits}) {
+            $iteration->{Iteration_hits} = {'Hit' => []};
+            next;
+        }
         $iteration->{Iteration_hits}{Hit} = [$iteration->{Iteration_hits}{Hit}] if( ref($iteration->{Iteration_hits}{Hit}) ne "ARRAY");
         my $hits = $iteration->{Iteration_hits}{Hit};
         foreach my $hit (@$hits){
