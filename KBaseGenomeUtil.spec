@@ -143,6 +143,36 @@ typedef structure {
  funcdef blast_against_genome(BlastGenomeParams params) 
  	returns (BlastOutput) authentication required;
 
+    /* 
+        The workspace ID of a BlastOutput data object.
+        @id ws BlastOutput
+    */
+    typedef string ws_blastoutput_id;
+
+    /* 
+        The workspace ID of a FeatureSet data object.
+        @id ws KBaseCollections.FeatureSet
+    */
+    typedef string ws_featureset_id;
+
+    typedef structure {
+    	
+	ws_blastoutput_id in_id;			/* The workspace input object id */
+    	ws_featureset_id out_id;			/* The workspace output object id */
+	string ws_id;					/* The workspace id */
+        float evalue;                                   /* Evalue cut-off */
+        int entries;                                   /* The number of entries to keep */
+
+    } FilterBlastOutputParams;
+
+    typedef structure {
+    	ws_featureset_id obj_name;			/* WS object name */
+    	string ws_id;			/* The workspace name */
+    }FeatureSetOutput;
+
+    /*  Filter BlastOutput object*/
+    funcdef filter_BlastOutput(FilterBlastOutputParams params)
+        returns (FeatureSetOutput) authentication required;
 
 
 };

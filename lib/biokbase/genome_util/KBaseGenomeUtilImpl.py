@@ -378,3 +378,74 @@ class KBaseGenomeUtil:
                              'returnVal is not type dict as required.')
         # return the results
         return [returnVal]
+
+    def filter_BlastOutput(self, ctx, params):
+        # ctx is the context object
+        # return variables are: returnVal
+        #BEGIN filter_BlastOutput
+
+
+        user_token=ctx['token']
+        ws_client=Workspace(url=self.__WS_URL, token=user_token)
+        blast_outputs=ws_client.get_objects([{'name':params['in_id'], 
+                                              'workspace': params['ws_id']}])
+
+            
+
+        fs ={'elements': {}}
+        fs['description'] = "FeatureSet from BlastOutput by "
+        printedEvalue = False
+        printedEntries = False
+        if 'evalue' in params and params['evalue'] != "":
+            fs['description'] += " E-value:{0}".format(params['evalue'])
+            printedEvalue = True
+        if 'entries' in params and (params['entries'] != "" or params['entries'] > 0):
+            if(printedEvalue): fs['description'] += ","
+            fs['description'] += " # of entries :{0}".format(params['entries'])
+            printedEntries = True
+        if not printedEvalue and not printedEntries:
+            fs['description'] += "no filtering"
+        
+        if len(blast_outputs) != 1:
+            fs['description'] = "No such blast output object was found : {0}/{1}".format(param['workspace_name'], param['object_name'])
+        else:
+            fm = {}
+            for boid in blast_outputs[0]['data']['BlastOutput_iterations']['Iteration']:
+                for hitd in boid['Iteration_hits']['Hit']:
+                    ali = hitd['Hit_def'].find('#')
+                    if(ali < 1): next
+                    fid = hitd['Hit_def'][0:ali]
+                    for hspd in hitd['Hit_hsps']['Hsp']:
+                        if fid in fm:
+                            if float(hspd['Hsp_evalue']) < fm[fid]:
+                                fm[fid] = float(hspd['Hsp_evalue'])
+                        else: fm[fid] = float(hspd['Hsp_evalue'])
+           
+            fms = sorted(fm.items(), key=lambda x: x[1], reverse=False)
+            bol = len(fms)
+            if params['entries'] != "" or int(params['entries']) > 0:
+                if(int(params['entries']) < bol):
+                    bol = int(params['entries'])
+            for i in range(bol):
+                if(fms[i][1] > float(params['evalue'])): break
+                fs['elements'][fms[i][0]] = []
+
+        ws_client.save_objects(
+            {"workspace":params['ws_id'],
+            "objects": [{
+                "type":"KBaseCollections.FeatureSet",
+                "data":fs,
+                "name":params['out_id']}
+            ]})
+
+        #pprint(fs)
+        returnVal = {'obj_name' : params['out_id'], 'ws_id' : params['ws_id']}
+
+        #END filter_BlastOutput
+
+        # At some point might do deeper type checking...
+        if not isinstance(returnVal, dict):
+            raise ValueError('Method filter_BlastOutput return value ' +
+                             'returnVal is not type dict as required.')
+        # return the results
+        return [returnVal]
