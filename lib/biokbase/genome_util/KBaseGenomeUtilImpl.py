@@ -363,7 +363,7 @@ class KBaseGenomeUtil:
         res= ws_client.save_objects(
             {"workspace":params['ws_id'],
             "objects": [{
-                "type":"KBaseGenomeUtil.BlastOutput",
+                "type":"GenomeUtil.BlastOutput",
                 "data":res1,
                 "name":params['output_name']}
             ]})
