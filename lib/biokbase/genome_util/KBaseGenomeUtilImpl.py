@@ -426,8 +426,12 @@ class KBaseGenomeUtil:
             if params['entries'] != "" or int(params['entries']) > 0:
                 if(int(params['entries']) < bol):
                     bol = int(params['entries'])
+            if params['evalue'] == "":
+                evalue = 10
+            else:
+                evalue = float(params['evalue'])
             for i in range(bol):
-                if(fms[i][1] > float(params['evalue'])): break
+                if(fms[i][1] > evalue): break
                 fs['elements'][fms[i][0]] = []
 
         ws_client.save_objects(
