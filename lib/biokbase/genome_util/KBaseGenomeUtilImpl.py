@@ -423,10 +423,10 @@ class KBaseGenomeUtil:
            
             fms = sorted(fm.items(), key=lambda x: x[1], reverse=False)
             bol = len(fms)
-            if params['entries'] != "" or int(params['entries']) > 0:
+            if 'entries' in params and (params['entries'] != "" or int(params['entries']) > 0):
                 if(int(params['entries']) < bol):
                     bol = int(params['entries'])
-            if params['evalue'] == "":
+            if 'evalue' not in params or params['evalue'] == "":
                 evalue = 10
             else:
                 evalue = float(params['evalue'])
