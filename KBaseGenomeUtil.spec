@@ -133,6 +133,7 @@ typedef structure {
   string BlastOutput_query-len;
   string BlastOutput_reference;
   string BlastOutput_version;
+  string err_msg;
   BlastOutput_param BlastOutput_param;
   BlastOutput_iterations BlastOutput_iterations;
 }BlastOutput;
