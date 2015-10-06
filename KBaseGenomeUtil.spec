@@ -124,6 +124,9 @@ typedef structure {
 
 
 
+/*
+@optional err_msg BlastOutput_iterations BlastOutput_query-def BlastOutput_reference
+*/
 
 typedef structure {
   string BlastOutput_db;
