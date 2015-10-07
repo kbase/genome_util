@@ -173,6 +173,20 @@ typedef structure {
     	string ws_id;			/* The workspace name */
     }FeatureSetOutput;
 
+
+  /*
+      @metadata ws handle.file_name
+      @metadata ws handle.type
+      @metadata ws index_type
+      @metadata ws index_program
+   */
+    typedef structure {
+        Handle handle;
+        KBaseCollections.GenomeSet genome_set;
+        string index_type; /* nucleotide or amino acid */
+        string index_program; /* formatdb, etc */
+    } BlastIndex;
+
     /*  Filter BlastOutput object*/
     funcdef filter_BlastOutput(FilterBlastOutputParams params)
         returns (FeatureSetOutput) authentication required;
