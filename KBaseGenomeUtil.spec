@@ -7,6 +7,7 @@ module KBaseGenomeUtil {
     typedef string genome_id;
 
     
+
     typedef structure {
     	
 	/*only one parameter from query and gene_id is required*/
@@ -148,6 +149,8 @@ typedef structure {
  funcdef blast_against_genome(BlastGenomeParams params) 
  	returns (BlastOutput) authentication required;
 
+
+
     /* 
         The workspace ID of a BlastOutput data object.
         @id ws BlastOutput
@@ -175,23 +178,49 @@ typedef structure {
     	string ws_id;			/* The workspace name */
     }FeatureSetOutput;
 
+    /*  Filter BlastOutput object*/
+    funcdef index(FilterBlastOutputParams params)
+        returns (FeatureSetOutput) authentication required;
 
-  /*
+
+    /*
       @metadata ws handle.file_name
       @metadata ws handle.type
       @metadata ws index_type
       @metadata ws index_program
-   */
+      @optional description
+    */
     typedef structure {
         KBaseAssembly.Handle handle;
         KBaseCollections.GenomeSet genome_set;
-        string index_type; /* nucleotide or amino acid */
+        string index_type; /* nucleotide, amino acid or both */
         string index_program; /* formatdb, etc */
+        string description;
     } BlastIndex;
 
-    /*  Filter BlastOutput object*/
-    funcdef filter_BlastOutput(FilterBlastOutputParams params)
-        returns (FeatureSetOutput) authentication required;
+    /* 
+        The workspace ID of a FeatureSet data object.
+        @id ws BlastIndex
+    */
+    typedef string ws_blastindex_ref;
+
+    /*
+      @optional err_msg blastindex_ref
+    */
+    typedef structure {
+      string err_msg;
+      ws_blastindex_ref blastindex_ref;
+    } BlastIndexingResult;
+
+    typedef structure {
+    	list<genome_id> genome_ids; 	/*genomes to index*/
+    	string index_program;		/*BLAST indexing program for blastp, blastn or etc.*/
+        string blast_index_name;
+        string description;
+    } BlastIndexParams;
+
+    funcdef index_genomes(BlastIndexParams params) 
+ 	returns (BlastIndexingResult) authentication required;
 
 
 };
