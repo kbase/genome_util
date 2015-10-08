@@ -1,3 +1,5 @@
+#include <KBaseAssembly.types>
+#include <KBaseCollections.types>
 module KBaseGenomeUtil {
 
 
@@ -181,7 +183,7 @@ typedef structure {
       @metadata ws index_program
    */
     typedef structure {
-        Handle handle;
+        KBaseAssembly.Handle handle;
         KBaseCollections.GenomeSet genome_set;
         string index_type; /* nucleotide or amino acid */
         string index_program; /* formatdb, etc */
