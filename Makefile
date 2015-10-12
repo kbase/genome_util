@@ -61,6 +61,7 @@ setup-local-dev-kb-py-libs:
 	rsync -vrh ../kbapi_common/lib/biokbase/* lib/biokbase/.
 	rsync -vrh ../auth/lib/biokbase/* lib/biokbase/.
 	rsync -vrh ../workspace_deluxe/lib/biokbase/* lib/biokbase/.
+	rsync -vrh ../handle_service/lib/biokbase/* lib/biokbase/.
 	#	--exclude TestMathClient.pl --exclude TestPerlServer.sh \
 	#	--exclude *.bak* --exclude AuthConstants.pm
 

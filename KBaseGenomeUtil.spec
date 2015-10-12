@@ -2,9 +2,50 @@
 #include <KBaseCollections.types>
 module KBaseGenomeUtil {
 
-
     /*genome_id is a KBase genome object id*/
     typedef string genome_id;
+
+    /*
+      @metadata ws handle.file_name
+      @metadata ws handle.type
+      @metadata ws index_type
+      @metadata ws index_program
+      @optional description
+    */
+    typedef structure {
+        KBaseAssembly.Handle handle;
+        KBaseCollections.GenomeSet genome_set;
+        string index_type; /* nucleotide, amino acid or both */
+        string index_program; /* formatdb, etc */
+        string description;
+    } BlastIndex;
+
+    /* 
+        The workspace ID of a FeatureSet data object.
+        @id ws BlastIndex
+    */
+    typedef string ws_blastindex_ref;
+
+    /*
+      @optional err_msg blastindex_ref
+    */
+    typedef structure {
+      string err_msg;
+      ws_blastindex_ref blastindex_ref;
+    } BlastIndexingResult;
+
+    typedef structure {
+    	list<genome_id> genome_ids; 	/*genomes to index*/
+    	string index_program;		/*BLAST indexing program for blastp, blastn or etc.*/
+        string blast_index_name;        /* index object name */
+        string description;
+        string ws_id;
+    } BlastIndexParams;
+
+    funcdef index_genomes(BlastIndexParams params) 
+ 	returns (BlastIndexingResult) authentication required;
+
+
 
     
 
@@ -15,7 +56,7 @@ module KBaseGenomeUtil {
 	string gene_id; 		/*gene_id is a KBase feature id*/
 
 
-    	list<genome_id> genome_ids; 	/*database to search against*/
+    	string blastindex_name; 	/* index workspace object name */
     	string blast_program;		/*BLAST input parameters, blastp, blastn or etc.*/
     	float e-value;			/*BLAST input parameters*/
 	float identity;			/*BLAST input parameters, sequence identity*/
@@ -179,48 +220,8 @@ typedef structure {
     }FeatureSetOutput;
 
     /*  Filter BlastOutput object*/
-    funcdef index(FilterBlastOutputParams params)
+    funcdef filter_BlastOutput(FilterBlastOutputParams params)
         returns (FeatureSetOutput) authentication required;
-
-
-    /*
-      @metadata ws handle.file_name
-      @metadata ws handle.type
-      @metadata ws index_type
-      @metadata ws index_program
-      @optional description
-    */
-    typedef structure {
-        KBaseAssembly.Handle handle;
-        KBaseCollections.GenomeSet genome_set;
-        string index_type; /* nucleotide, amino acid or both */
-        string index_program; /* formatdb, etc */
-        string description;
-    } BlastIndex;
-
-    /* 
-        The workspace ID of a FeatureSet data object.
-        @id ws BlastIndex
-    */
-    typedef string ws_blastindex_ref;
-
-    /*
-      @optional err_msg blastindex_ref
-    */
-    typedef structure {
-      string err_msg;
-      ws_blastindex_ref blastindex_ref;
-    } BlastIndexingResult;
-
-    typedef structure {
-    	list<genome_id> genome_ids; 	/*genomes to index*/
-    	string index_program;		/*BLAST indexing program for blastp, blastn or etc.*/
-        string blast_index_name;
-        string description;
-    } BlastIndexParams;
-
-    funcdef index_genomes(BlastIndexParams params) 
- 	returns (BlastIndexingResult) authentication required;
 
 
 };

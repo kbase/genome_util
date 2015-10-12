@@ -12,6 +12,11 @@ import script_util
 from biokbase.workspace.client import Workspace
 from biokbase.auth import Token
 
+try:
+    from biokbase.HandleService.Client import HandleService
+except:
+    from biokbase.AbstractHandle.Client import AbstractHandle as HandleService
+
 _KBaseGenomeUtil__DATA_VERSION = "0.5"
 #END_HEADER
 
@@ -33,10 +38,11 @@ class KBaseGenomeUtil:
     #########################################
     #BEGIN_CLASS_HEADER
     # Config variables that SHOULD get overwritten in the constructor
-    __TEMP_DIR = 'temp_dir'
+    __TEMP_DIR = 'index'
     __WS_URL = 'https://ci.kbase.us/services/ws'
+    __HS_URL = 'https://ci.kbase.us/services/handle_service'
     __SHOCK_URL = 'https://ci.kbase.us/services/shock-api/'
-    __BLAST_DIR = 'blast_dir'
+    __BLAST_DIR = 'blast'
     __GENOME_FA = 'genome.fa'
     __ANNO_JSON = 'annotation.json'
     __QUERY_FA = 'query.fa'
@@ -56,6 +62,7 @@ class KBaseGenomeUtil:
                     'tblastn' : 'transcript_db',
                     'tblastx' : 'transcript_db'}
 
+
     #END_CLASS_HEADER
 
     # config contains contents of config file in a hash or None if it couldn't
@@ -67,6 +74,8 @@ class KBaseGenomeUtil:
         #pprint(config)
         if 'ws_url' in config:
               self.__WS_URL = config['ws_url']
+        if 'hs_url' in config:
+              self.__HS_URL = config['hs_url']
         if 'shock_url' in config:
               self.__SHOCK_URL = config['shock_url']
         if 'temp_dir' in config:
@@ -99,10 +108,155 @@ class KBaseGenomeUtil:
         #END_CONSTRUCTOR
         pass
 
+    def index_genomes(self, ctx, params):
+        # ctx is the context object
+        # return variables are: returnVal
+        #BEGIN index_genomes
+        self.__LOGGER.info( "Preparing Target FA")
+
+        blast_dir =self.__BLAST_DIR
+        if os.path.exists(blast_dir):
+            files=glob.glob("%s/*" % blast_dir)
+            for f in files: os.remove(f)
+        if not os.path.exists(blast_dir): os.makedirs(blast_dir)
+      
+        user_token=ctx['token']
+        svc_token = Token(user_id=self.__SVC_USER, password=self.__SVC_PASS).token
+        ws_client=Workspace(url=self.__WS_URL, token=user_token)
+
+        err_msg = ""
+           
+        target_nt_fn = "%s/%s_nt.fa" %( blast_dir, params['blastindex_name'])
+        target_aa_fn = "%s/%s_aa.fa" %( blast_dir, params['blastindex_name'])
+
+        try:
+          target_nt=open(target_nt_fn,'w')
+          target_aa=open(target_aa_fn,'w')
+        except:
+          self.__LOGGER.error("Couldn't open file")
+          err_msg = "Backend awe client error: Couldn't open files\n"
+
+        have_nt_seq = False
+        have_aa_seq = False
+
+
+        gs = {'elements' : {}}
+
+        # Iterate one at a time to cope with main memory limit for euk genomes
+        for genome_id in params['genome_ids']: 
+
+            obj_infos = ws_client.get_object_info_new({"objects": [{'name':genome_id, # replace `0' with loop
+                                                      'workspace': params['ws_id']}]})
+
+            if len(obj_infos) < 1:
+                self.__LOGGER.error("Couldn't find %s:%s from the workspace" %(params['ws_id'],genome_id))
+                #err_msg += "Workspace error: Couldn't find %s:%s from the workspace\n" %(params['ws_id'],genome_id)                
+                # we can continue due to multiple genomes
+                #raise Exception("Couldn't find %s:%s from the workspace" %(params['ws_id'],genome_id)) 
+
+            ref_id = "{0}/{1}/{2}".format(obj_infos[0][6],obj_infos[0][0],obj_infos[0][4])
+            gs['elements'][genome_id] = [ref_id]
+           
+            self.__LOGGER.info( "Downloading genome object from workspace {0}".format(ref_id))
+           
+            # TODO: make the following procedures to be loop for each genome_ids 
+            genome_list=ws_client.get_object_subset([{'name':genome_id, # replace `0' with loop
+                                                      'workspace': params['ws_id'], 
+                                                      'included':['features']}])
+            genome = genome_list[0]
+           
+           
+            self.__LOGGER.info( "Dumping seq for %s" % genome_id)
+            # Dump genome sequences
+            check_seq=0
+            #extract protein sequences from the genome object
+            for gene in genome['data']['features']:
+                  #>kb.g.1234.CDS.1234#At1g3333 amalase...
+                  function = "NA"
+                  aliases = "NA"
+                  if 'function' in gene: 
+                      function = gene['function']
+                  if 'aliases' in gene: aliases = ",".join(gene['aliases'])
+                  if 'protein_translation' in gene:
+                        target_aa.write(">%s#%s#%s#%s\n%s\n" % (gene['id'], ref_id, aliases, function, gene['protein_translation']))
+                        have_aa_seq = True
+                  if 'dna_sequence' in gene:
+                        target_nt.write(">%s#%s#%s#%s\n%s\n" % (gene['id'], ref_id, aliases, function, gene['dna_sequence']))
+                        have_nt_seq = True
+        target_nt.close()
+        target_aa.close()
+            
+            
+           
+        if not have_nt_seq :
+            self.__LOGGER.info("The genome objects do not contain any dna sequences!")
+        if not have_aa_seq :
+            self.__LOGGER.info("The genome objects do not contain any amino acid sequences!")
+
+        index_type = 'none'
+           
+        if have_nt_seq :
+            cmdstring="%s -i %s -p N" %(self.__INDEX_CMD, target_nt_fn)
+            # TODO: replace it to subprocess.Popen
+            os.system(cmdstring)
+            index_type = 'nucleotide'
+           
+        if have_aa_seq :
+            cmdstring="%s -i %s -p T" %(self.__INDEX_CMD, target_aa_fn)
+            # TODO: replace it to subprocess.Popen
+            os.system(cmdstring)
+            if index_type == 'nucleotide': index_type = 'both'
+            else: index_type = 'protein'
+        
+        #os.remove(target_nt_fn)
+        #os.remove(target_aa_fn)
+
+        # compress
+        script_util.zip_files(self.__LOGGER, blast_dir, "%s.zip" % params['blastindex_name'])
+           
+        hs = HandleService(url=self.__HS_URL, token=user_token)
+        handle = hs.upload("%s.zip" % (params['blastindex_name']))
+
+        bi = {'handle' : handle, 'genome_set' : gs, 'index_type' : index_type, 'index_program' : params['index_program']}
+        if 'description' in params: bi['description'] = params['description']
+
+        if index_type == 'none': 
+            err_msg = 'No sequences were indexed'
+            res= ws_client.save_objects(
+                {"workspace":params['ws_id'],
+                "objects": [{
+                    "type":"GenomeUtil.BlastIndex",
+                    "data":bi,
+                    "meta" : {'err_msg' : err_msg},
+                    "name":params['blastindex_name']}
+                ]})
+        else:
+            res= ws_client.save_objects(
+                {"workspace":params['ws_id'],
+                "objects": [{
+                    "type":"GenomeUtil.BlastIndex",
+                    "data":bi,
+                    "name":params['blastindex_name']}
+                ]})
+        returnVal = { 'blastindex_ref' : "%s/%s" % (params['ws_id'], params['blastindex_name']) }
+        if index_type == 'none':
+          returnVal['err_msg'] = err_msg
+        
+        #END index_genomes
+
+        # At some point might do deeper type checking...
+        if not isinstance(returnVal, dict):
+            raise ValueError('Method index_genomes return value ' +
+                             'returnVal is not type dict as required.')
+        # return the results
+        return [returnVal]
+
     def blast_against_genome(self, ctx, params):
         # ctx is the context object
         # return variables are: returnVal
         #BEGIN blast_against_genome
+
+        # TODO: Rename blast_search
 
         self.__LOGGER.info( "Preparing FA")
         if len(params['query']) > 5:
@@ -129,16 +283,18 @@ class KBaseGenomeUtil:
         svc_token = Token(user_id=self.__SVC_USER, password=self.__SVC_PASS).token
         ws_client=Workspace(url=self.__WS_URL, token=user_token)
 
+
+        err_msg = ""
+
+        blast_dir =self.__BLAST_DIR
+        if os.path.exists(blast_dir):
+            files=glob.glob("%s/*" % blast_dir)
+            for f in files: os.remove(f)
+        if not os.path.exists(blast_dir): os.makedirs(blast_dir)
+        target_fn = "%s/%s" %( blast_dir, self.__GENOME_FA)
         if 'target_seqs' in params:
             # let's build index directly and throw away
             sequence = params['target_seqs']
-            blast_dir = "%s/%s" %(self.__TEMP_DIR, self.__BLAST_DIR)
-            if os.path.exists(blast_dir):
-                files=glob.glob("%s/*" % blast_dir)
-                for f in files: os.remove(f)
-            if not os.path.exists(blast_dir): os.makedirs(blast_dir)
-            target_fn = "%s/%s" %( blast_dir, self.__GENOME_FA)
-            anno_fn = "%s/%s" %( blast_dir, self.__ANNO_JSON)
 
             target=open(target_fn,'w')
             if sequence.startswith(">"):
@@ -150,9 +306,6 @@ class KBaseGenomeUtil:
                 target.write(seqes[i])
             target.close()
          
-            with open(anno_fn,'w') as anno:
-                json.dump({}, anno)
-
             if(self.__INDEX_TYPE[params['blast_program']]  == 'protein_db'):
                 formatdb_type='T'
             elif(self.__INDEX_TYPE[params['blast_program']]  == 'transcript_db'):
@@ -165,134 +318,42 @@ class KBaseGenomeUtil:
             os.system(cmdstring)
 
         else:
-            obj_infos = ws_client.get_object_info_new({"objects": [{'name':params['genome_ids'][0],'workspace': params['ws_id']}]})
-           
-            if len(obj_infos) < 1:
-                self.__LOGGER.error("Couldn't find %s:%s from the workspace" %(params['ws_id'],params['genome_ids'][0]))
-                raise Exception("Couldn't find %s:%s from the workspace" %(params['ws_id'],params['genome_ids'][0]))
-            ref_id = "kb|ws.{0}.obj.{1}.ver.{2}".format(obj_infos[0][6],obj_infos[0][0],obj_infos[0][4])
-            obj_chks = obj_infos[0][8]
-           
-            self.__LOGGER.info( "Querying genome object index from shock for workspace checksum {0}".format(obj_chks))
-            query_rst = script_util.query_shock_node(self.__LOGGER, 
-                shock_service_url = self.__SHOCK_URL,
-                token = svc_token,
-                condition = {'ws_obj_chks' : obj_chks, 
-                             'service' : 'genome_util', 
-                             'svc_data_version' : __DATA_VERSION, 
-                             'index_type' : self.__INDEX_TYPE[params['blast_program']]})
-           
-            blast_dir = "%s/%s" %(self.__TEMP_DIR, self.__BLAST_DIR)
-            if os.path.exists(blast_dir):
-                files=glob.glob("%s/*" % blast_dir)
-                for f in files: os.remove(f)
-            if not os.path.exists(blast_dir): os.makedirs(blast_dir)
-            zip_fn = "{0}/{1}".format(self.__TEMP_DIR,self.__INDEX_ZIP)
-           
-           
-            target_fn = "%s/%s" %( blast_dir, self.__GENOME_FA)
-            anno_fn = "%s/%s" %( blast_dir, self.__ANNO_JSON)
-            g2f = {}
-            if( query_rst is None or len(query_rst) == 0): # no index available
-                self.__LOGGER.info( "Downloading genome object from workspace {0}".format(ref_id))
-           
-                # TODO: make the following procedures to be loop for each genome_ids 
-                genome_list=ws_client.get_object_subset([{'name':params['genome_ids'][0], # replace `0' with loop
-                                                          'workspace': params['ws_id'], 
-                                                          'included':['features']}])
-                genome = genome_list[0]
-           
-           
-                self.__LOGGER.info( "Indexing genome\n")
-                # Dump genome sequences
-                check_seq=0
-                if(self.__INDEX_TYPE[params['blast_program']]  == 'protein_db'):
-                    formatdb_type='T'
-                    #extract protein sequences from the genome object
-                    target=open(target_fn,'w')
-                    for gene in genome['data']['features']:
-                          #>kb.g.1234.CDS.1234#At1g3333 amalase...
-                          function = "NA"
-                          aliases = "NA"
-                          if 'function' in gene: 
-                              g2f[gene['id']] = gene['function']
-                              function = gene['function']
-                          if 'aliases' in gene: aliases = ",".join(gene['aliases'])
-                          if 'protein_translation' in gene.keys():
-                                target.write(">%s#%s#%s\n%s\n" % (gene['id'], aliases, function, gene['protein_translation']))
-                                check_seq=1
-                    target.close()
-              
-              
-                elif(self.__INDEX_TYPE[params['blast_program']]  == 'transcript_db'):
-                    formatdb_type='F'
-                    #extract dna sequence from the genome object
-                    target=open(target_fn,'w')
-                    for gene in genome['data']['features']:
-                          function = ""
-                          aliases = ""
-                          if 'function' in gene: 
-                              g2f[gene['id']] = gene['function']
-                              function = gene['function']
-                          if 'aliases' in gene: aliases = ",".join(gene['aliases'])
-                          if 'dna_sequence' in gene.keys():
-                                target.write(">%s#%s#%s\n%s\n" % (gene['id'], aliases, function, gene['dna_sequence']))
-                                check_seq=1
-                          if 'function' in gene: g2f[gene['id']] = gene['function']
-                    target.close()
-                else:
-                    self.__LOGGER.error("{0} is not yet supported".format(params['blast_program']))
-                    raise Exception("{0} is not yet supported".format(params['blast_program']))
-           
-                if check_seq == 0:
-                    self.__LOGGER.error("The genome object does not contain any sequences!")
-                    raise Exception("The genome object does not contain any sequences!")
-           
-           
-                
-           
-           
-                # dump function description
-                with open(anno_fn,'w') as anno:
-                    json.dump(g2f, anno)
-                
-              
-                cmdstring="%s -i %s -p %s" %(self.__INDEX_CMD, target_fn, formatdb_type)
-                # TODO: replace it to subprocess.Popen
-                os.system(cmdstring)
-           
-                # compress
-                script_util.zip_files(self.__LOGGER, blast_dir, zip_fn)
-           
-                # upload
-                # TODO: Expand attribute information for future service expansion
-                script_util.upload_file_to_shock(self.__LOGGER, 
-                                     shock_service_url = self.__SHOCK_URL, 
-                                     filePath = zip_fn,
-                                     token = svc_token, attributes = {
-                                       "ws_ref_id" : ref_id,
-                                       "ws_obj_chks" : obj_chks,
-                                       'service' : 'genome_util', 
-                                       'svc_data_version' : __DATA_VERSION, 
-                                       'index_type' : self.__INDEX_TYPE[params['blast_program']]
-                                     })
-           
-            elif (len(query_rst) == 1): # index is available
-                # download index
-                self.__LOGGER.info("Downloading the genome index")
-                script_util.download_file_from_shock(self.__LOGGER,
-                                         shock_service_url = self.__SHOCK_URL, 
-                                         shock_id = query_rst[0]['id'],
-                                         filename = self.__INDEX_ZIP,
-                                         directory = self.__TEMP_DIR,
-                                         token = svc_token)
-                script_util.unzip_files(self.__LOGGER, zip_fn, blast_dir)
-                with open(anno_fn,'r') as anno:
-                    g2f = json.load(anno)
-           
+            blast_indexes=ws_client.get_object_subset([{'name':params['blastindex_name'],
+                                                      'workspace': params['ws_id'], 
+                                                      'included':['handle']}])
+            if len(blast_indexes) < 1:
+                self.__LOGGER.error("Couldn't find %s:%s from the workspace" %(params['ws_id'],params['blastindex_name']))
+                err_msg = "Couldn't find %s:%s from the workspace" %(params['ws_id'],params['genome_ids'][0])
+
+            
+            # TODO: Add err handling
+            zip_fn = blast_indexes[0]['data']['handle']['file_name']
+            target_fn = "%s/%s" %(blast_dir, zip_fn[:-4]) # remove '.zip'
+
+            if(self.__INDEX_TYPE[params['blast_program']]  == 'protein_db'):
+                target_fn += '_aa.fa'
+            elif(self.__INDEX_TYPE[params['blast_program']]  == 'transcript_db'):
+                target_fn += '_nt.fa'
             else:
-                self.__LOGGER.error("There are multiple index for the same checksum!")
-                raise
+                self.__LOGGER.error("{0} is not yet supported".format(params['blast_program']))
+                raise Exception("{0} is not yet supported".format(params['blast_program']))
+
+            # TODO: Add err handling
+            zip_fn = blast_indexes[0]['data']['handle']['file_name']
+            pprint(blast_indexes[0])
+           
+            self.__LOGGER.info("Downloading the genome index")
+            #hs = HandleService(url=self.__HS_URL, token=user_token)
+            script_util.download_file_from_shock(self.__LOGGER,
+                            shock_service_url= blast_indexes[0]['data']['handle']['url'],
+                            shock_id= blast_indexes[0]['data']['handle']['id'],
+                            filename= blast_indexes[0]['data']['handle']['file_name'],
+                            directory= '.',
+                            token = user_token)
+           
+            # download index
+            script_util.unzip_files(self.__LOGGER, zip_fn, blast_dir)
+
 
         self.__LOGGER.info( "Searching...")
         #blast search
@@ -383,8 +444,6 @@ class KBaseGenomeUtil:
         # ctx is the context object
         # return variables are: returnVal
         #BEGIN filter_BlastOutput
-
-
         user_token=ctx['token']
         ws_client=Workspace(url=self.__WS_URL, token=user_token)
         blast_outputs=ws_client.get_objects([{'name':params['in_id'], 
@@ -423,15 +482,11 @@ class KBaseGenomeUtil:
            
             fms = sorted(fm.items(), key=lambda x: x[1], reverse=False)
             bol = len(fms)
-            if 'entries' in params and (params['entries'] != "" or int(params['entries']) > 0):
+            if params['entries'] != "" or int(params['entries']) > 0:
                 if(int(params['entries']) < bol):
                     bol = int(params['entries'])
-            if 'evalue' not in params or params['evalue'] == "":
-                evalue = 10
-            else:
-                evalue = float(params['evalue'])
             for i in range(bol):
-                if(fms[i][1] > evalue): break
+                if(fms[i][1] > float(params['evalue'])): break
                 fs['elements'][fms[i][0]] = []
 
         ws_client.save_objects(
