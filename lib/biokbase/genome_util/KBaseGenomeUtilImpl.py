@@ -509,11 +509,18 @@ class KBaseGenomeUtil:
             fs['description'] = "No such blast output object was found : {0}/{1}".format(param['workspace_name'], param['object_name'])
         else:
             fm = {}
+            f2g = {}
             for boid in blast_outputs[0]['data']['BlastOutput_iterations']['Iteration']:
                 for hitd in boid['Iteration_hits']['Hit']:
+                    print hitd['Hit_def']
                     ali = hitd['Hit_def'].find('#')
-                    if(ali < 1): next
+                    if(ali < 0): next
                     fid = hitd['Hit_def'][0:ali]
+                    gri = hitd['Hit_def'].find('#', ali+1)
+                    if fid not in f2g: f2g[fid] = {}
+                    if (gri >=  0 and not gri == (ali+1)): 
+                        grid = hitd['Hit_def'][(ali+1):gri]
+                        f2g[fid][grid] = 1
                     for hspd in hitd['Hit_hsps']['Hsp']:
                         if fid in fm:
                             if float(hspd['Hsp_evalue']) < fm[fid]:
@@ -527,7 +534,10 @@ class KBaseGenomeUtil:
                     bol = int(params['entries'])
             for i in range(bol):
                 if(fms[i][1] > float(params['evalue'])): break
-                fs['elements'][fms[i][0]] = []
+                if fms[i][0] in f2g:
+                    fs['elements'][fms[i][0]] = f2g[fms[i][0]].keys()
+                else:
+                    fs['elements'][fms[i][0]] = []
 
         ws_client.save_objects(
             {"workspace":params['ws_id'],
