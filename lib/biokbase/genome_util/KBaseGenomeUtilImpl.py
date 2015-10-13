@@ -7,6 +7,7 @@ import glob
 import json
 import logging
 import time
+import subprocess
 from pprint import pprint
 import script_util
 from biokbase.workspace.client import Workspace
@@ -80,12 +81,12 @@ no_rst = """{
             "Parameters_matrix": "BLOSUM62"
         }
     }, 
-    "BlastOutput_program": "blastx", 
-    "BlastOutput_query-ID": "lcl|1_0", 
-    "BlastOutput_query-def": "query_seq_0", 
-    "BlastOutput_query-len": "8", 
-    "BlastOutput_reference": "~Reference: Altschul, Stephen F., Thomas L. Madden, Alejandro A. Schaffer, ~Jinghui Zhang, Zheng Zhang, Webb Miller, and David J. Lipman (1997), ~\\"Gapped BLAST and PSI-BLAST: a new generation of protein database search~programs\\",  Nucleic Acids Res. 25:3389-3402.", 
-    "BlastOutput_version": "blastx 2.2.25 [Feb-01-2011]"
+    "BlastOutput_program": "error", 
+    "BlastOutput_query-ID": "error", 
+    "BlastOutput_query-def": "error", 
+    "BlastOutput_query-len": "na", 
+    "BlastOutput_reference": "error", 
+    "BlastOutput_version": "error"
 }"""
 
 
@@ -286,7 +287,15 @@ class KBaseGenomeUtil:
                 try:
                     cmdstring="%s -i %s -p N" %(self.__INDEX_CMD, target_nt_fn)
                     # TODO: replace it to subprocess.Popen
-                    os.system(cmdstring)
+                    tool_process = subprocess.Popen(cmdstring, stderr=subprocess.PIPE, shell=True)
+                    stdout, stderr = tool_process.communicate()
+                    
+                    if stdout is not None and len(stdout) > 0:
+                        self.__LOGGER.info(stdout)
+                    
+                    if stderr is not None and len(stderr) > 0:
+                        self.__LOGGER.error("Indexing error: " + stderr)
+                        raise KBaseGenomeUtilException("Indexing error: " + stderr)
                 except Exception, e:
                     raise KBaseGenomeUtilException("Failed to run indexing program (%s) : %s " %(self.__INDEX_CMD, e))
                    
@@ -296,7 +305,15 @@ class KBaseGenomeUtil:
                 try:
                     cmdstring="%s -i %s -p T" %(self.__INDEX_CMD, target_aa_fn)
                     # TODO: replace it to subprocess.Popen
-                    os.system(cmdstring)
+                    tool_process = subprocess.Popen(cmdstring, stderr=subprocess.PIPE, shell=True)
+                    stdout, stderr = tool_process.communicate()
+                    
+                    if stdout is not None and len(stdout) > 0:
+                        self.__LOGGER.info(stdout)
+                    
+                    if stderr is not None and len(stderr) > 0:
+                        self.__LOGGER.error("Indexing error: " + stderr)
+                        raise KBaseGenomeUtilException("Indexing error: " + stderr)
                 except Exception, e:
                     raise KBaseGenomeUtilException("Failed to run indexing program (%s) : %s " %(self.__INDEX_CMD, e))
                 if index_type == 'nucleotide': index_type = 'both'
@@ -420,7 +437,15 @@ class KBaseGenomeUtil:
                    raise KBaseGenomeUtilException("{0} is not yet supported".format(params['blast_program']))
                cmdstring="%s -i %s -p %s -o T" %(self.__INDEX_CMD, target_fn, formatdb_type)
                # TODO: replace it to subprocess.Popen
-               os.system(cmdstring)
+               tool_process = subprocess.Popen(cmdstring, stderr=subprocess.PIPE, shell=True)
+               stdout, stderr = tool_process.communicate()
+   
+               if stdout is not None and len(stdout) > 0:
+                   self.__LOGGER.info(stdout)
+   
+               if stderr is not None and len(stderr) > 0:
+                   self.__LOGGER.error("Index error: " + stderr)
+                   raise KBaseGenomeUtilException("Index error: " + stderr)
         
            else:
                try:
@@ -520,9 +545,26 @@ class KBaseGenomeUtil:
            # TODO: replace it to subprocess.Popen
            #print cmdstring
            try: 
-               os.system(cmdstring)
+               tool_process = subprocess.Popen(cmdstring, stderr=subprocess.PIPE, shell=True)
+               stdout, stderr = tool_process.communicate()
+   
+               if stdout is not None and len(stdout) > 0:
+                   self.__LOGGER.info(stdout)
+   
+               if stderr is not None and len(stderr) > 0:
+                   self.__LOGGER.error("Search error: " + stderr)
+                   raise KBaseGenomeUtilException("Search error: " + stderr)
                # TODO: Convert the following Perl script to python library code
-               os.system("xml2kbaseblastjson result.txt > blastoutput_new.json")
+               tool_process = subprocess.Popen("xml2kbaseblastjson result.txt > blastoutput_new.json", stderr=subprocess.PIPE, shell=True)
+               stdout, stderr = tool_process.communicate()
+   
+               if stdout is not None and len(stdout) > 0:
+                   self.__LOGGER.info(stdout)
+   
+               if stderr is not None and len(stderr) > 0:
+                   self.__LOGGER.error("Output conversion error: " + stderr)
+                   raise KBaseGenomeUtilException("Output conversion error: " + stderr)
+
                with open('blastoutput_new.json', 'r') as myfile:
                  	res1 = json.load(myfile)
            except Exception,e:
