@@ -242,6 +242,8 @@ class KBaseGenomeUtil:
                     genome_list=ws_client.get_object_subset([{'name':genome_id, # replace `0' with loop
                                                               'workspace': params['ws_id'], 
                                                               'included':['features']}])
+                    #genome_list=ws_client.get_objects([{'name':genome_id, # replace `0' with loop
+                    #                                          'workspace': params['ws_id']}])
                     genome = genome_list[0]
                 except Exception, e:
                     raise KBaseGenomeUtilException("Failed to download genome object itself even though we got the object information")
