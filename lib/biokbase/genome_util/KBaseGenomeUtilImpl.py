@@ -27,6 +27,68 @@ class KBaseGenomeUtilException(Exception):
         return repr(self.msg)
 
 
+
+no_rst = """{
+    "BlastOutput_db": "NoDB", 
+    "BlastOutput_iterations": {
+        "Iteration": [
+            {
+                "Iteration_hits": {
+                    "Hit": []
+                }, 
+                "Iteration_iter-num": "1", 
+                "Iteration_message": "ERR_MSG", 
+                "Iteration_query-ID": "lcl|1_0", 
+                "Iteration_query-len": "QRY_LNGTH", 
+                "Iteration_stat": {
+                    "Statistics": {
+                        "Statistics_db-len": "1331648", 
+                        "Statistics_db-num": "4280", 
+                        "Statistics_eff-space": "2.6633e+06", 
+                        "Statistics_entropy": "0.14", 
+                        "Statistics_hsp-len": "0", 
+                        "Statistics_kappa": "0.041", 
+                        "Statistics_lambda": "0.267"
+                    }
+                }
+            }, 
+            {
+                "Iteration_hits": {
+                    "Hit": []
+                }, 
+                "Iteration_iter-num": "1", 
+                "Iteration_stat": {
+                    "Statistics": {
+                        "Statistics_db-len": "1331648", 
+                        "Statistics_db-num": "4280", 
+                        "Statistics_eff-space": "2.6633e+06", 
+                        "Statistics_entropy": "0.14", 
+                        "Statistics_hsp-len": "0", 
+                        "Statistics_kappa": "0.041", 
+                        "Statistics_lambda": "0.267"
+                    }
+                }
+            }
+        ]
+    }, 
+    "BlastOutput_param": {
+        "Parameters": {
+            "Parameters_expect": "0.05", 
+            "Parameters_filter": "F", 
+            "Parameters_gap-extend": "1", 
+            "Parameters_gap-open": "11", 
+            "Parameters_matrix": "BLOSUM62"
+        }
+    }, 
+    "BlastOutput_program": "blastx", 
+    "BlastOutput_query-ID": "lcl|1_0", 
+    "BlastOutput_query-def": "query_seq_0", 
+    "BlastOutput_query-len": "8", 
+    "BlastOutput_reference": "~Reference: Altschul, Stephen F., Thomas L. Madden, Alejandro A. Schaffer, ~Jinghui Zhang, Zheng Zhang, Webb Miller, and David J. Lipman (1997), ~\\"Gapped BLAST and PSI-BLAST: a new generation of protein database search~programs\\",  Nucleic Acids Res. 25:3389-3402.", 
+    "BlastOutput_version": "blastx 2.2.25 [Feb-01-2011]"
+}"""
+
+
 #END_HEADER
 
 
@@ -279,6 +341,8 @@ class KBaseGenomeUtil:
             returnVal = { 'blastindex_ref' : "%s/%s" % (params['ws_id'], params['blastindex_name']) }
             if index_type == 'none':
                 returnVal['err_msg'] = err_msg
+        except MemoryError, e:
+            returnVal = {'err_msg' : 'Not enough main memory: please use smaller number of genomes only' }
         except Exception, e:
             returnVal = {'err_msg' : str(e)}
         
@@ -298,179 +362,228 @@ class KBaseGenomeUtil:
 
         # TODO: Rename blast_search
 
-        self.__LOGGER.info( "Preparing FA")
-        if len(params['query']) > 5:
-            sequence=params['query']
-        else:
-            self.__LOGGER.error("The input sequence is too short!")
-            raise Exception("The input sequence is too short!")
-
-        if not os.path.exists(self.__TEMP_DIR): os.makedirs(self.__TEMP_DIR)
-      
-        #print "generate input file for query sequence\n"
-        query_fn = "%s/%s" %(self.__TEMP_DIR, self.__QUERY_FA)
-        target=open(query_fn,'w')
-        if sequence.startswith(">"):
-          target.write(sequence)
-        else:
-          seqes = sequence.split("\n")
-          for i in range(len(seqes)):
-            target.write(">query_seq_%d\n" %(i))
-            target.write(seqes[i])
-        target.close()
-      
-        user_token=ctx['token']
-        svc_token = Token(user_id=self.__SVC_USER, password=self.__SVC_PASS).token
-        ws_client=Workspace(url=self.__WS_URL, token=user_token)
-
-
-        err_msg = ""
-
-        blast_dir =self.__BLAST_DIR
-        if os.path.exists(blast_dir):
-            files=glob.glob("%s/*" % blast_dir)
-            for f in files: os.remove(f)
-        if not os.path.exists(blast_dir): os.makedirs(blast_dir)
-        target_fn = "%s/%s" %( blast_dir, self.__GENOME_FA)
-        if 'target_seqs' in params:
-            # let's build index directly and throw away
-            sequence = params['target_seqs']
-
-            target=open(target_fn,'w')
-            if sequence.startswith(">"):
-              target.write(sequence)
-            else:
-              seqes = sequence.split("\n")
-              for i in range(len(seqes)):
-                target.write(">target_seq_%d\n" %(i))
-                target.write(seqes[i])
-            target.close()
+        try:
+           self.__LOGGER.info( "Preparing FA")
+           if len(params['query']) > 5:
+               sequence=params['query']
+           else:
+               self.__LOGGER.error("The input sequence is too short!")
+               raise KBaseGenomeUtilException("The input sequence is too short!")
+        
+           if not os.path.exists(self.__TEMP_DIR): os.makedirs(self.__TEMP_DIR)
          
-            if(self.__INDEX_TYPE[params['blast_program']]  == 'protein_db'):
-                formatdb_type='T'
-            elif(self.__INDEX_TYPE[params['blast_program']]  == 'transcript_db'):
-                formatdb_type='F'
-            else:
-                self.__LOGGER.error("{0} is not yet supported".format(params['blast_program']))
-                raise Exception("{0} is not yet supported".format(params['blast_program']))
-            cmdstring="%s -i %s -p %s -o T" %(self.__INDEX_CMD, target_fn, formatdb_type)
-            # TODO: replace it to subprocess.Popen
-            os.system(cmdstring)
-
-        else:
-            blast_indexes=ws_client.get_object_subset([{'name':params['blastindex_name'],
-                                                      'workspace': params['ws_id'], 
-                                                      'included':['handle']}])
-            if len(blast_indexes) < 1:
-                self.__LOGGER.error("Couldn't find %s:%s from the workspace" %(params['ws_id'],params['blastindex_name']))
-                err_msg = "Couldn't find %s:%s from the workspace" %(params['ws_id'],params['genome_ids'][0])
-
+           #print "generate input file for query sequence\n"
+           query_fn = "%s/%s" %(self.__TEMP_DIR, self.__QUERY_FA)
+           target=open(query_fn,'w')
+           if sequence.startswith(">"):
+             target.write(sequence)
+           else:
+             seqes = sequence.split("\n")
+             for i in range(len(seqes)):
+               target.write(">query_seq_%d\n" %(i))
+               target.write(seqes[i])
+           target.close()
+         
+           user_token=ctx['token']
+           svc_token = Token(user_id=self.__SVC_USER, password=self.__SVC_PASS).token
+           ws_client=Workspace(url=self.__WS_URL, token=user_token)
+        
+        
+           err_msg = ""
+        
+           blast_dir =self.__BLAST_DIR
+           if os.path.exists(blast_dir):
+               files=glob.glob("%s/*" % blast_dir)
+               for f in files: os.remove(f)
+           if not os.path.exists(blast_dir): os.makedirs(blast_dir)
+           target_fn = "%s/%s" %( blast_dir, self.__GENOME_FA)
+           if 'target_seqs' in params:
+               # let's build index directly and throw away
+               sequence = params['target_seqs']
+        
+               target=open(target_fn,'w')
+               if sequence.startswith(">"):
+                 target.write(sequence)
+               else:
+                 seqes = sequence.split("\n")
+                 for i in range(len(seqes)):
+                   target.write(">target_seq_%d\n" %(i))
+                   target.write(seqes[i])
+               target.close()
             
-            # TODO: Add err handling
-            zip_fn = blast_indexes[0]['data']['handle']['file_name']
-            target_fn = "%s/%s" %(blast_dir, zip_fn[:-4]) # remove '.zip'
-
-            if(self.__INDEX_TYPE[params['blast_program']]  == 'protein_db'):
-                target_fn += '_aa.fa'
-            elif(self.__INDEX_TYPE[params['blast_program']]  == 'transcript_db'):
-                target_fn += '_nt.fa'
-            else:
-                self.__LOGGER.error("{0} is not yet supported".format(params['blast_program']))
-                raise Exception("{0} is not yet supported".format(params['blast_program']))
-
-            # TODO: Add err handling
-            zip_fn = blast_indexes[0]['data']['handle']['file_name']
-            pprint(blast_indexes[0])
-           
-            self.__LOGGER.info("Downloading the genome index")
-            #hs = HandleService(url=self.__HS_URL, token=user_token)
-            script_util.download_file_from_shock(self.__LOGGER,
-                            shock_service_url= blast_indexes[0]['data']['handle']['url'],
-                            shock_id= blast_indexes[0]['data']['handle']['id'],
-                            filename= blast_indexes[0]['data']['handle']['file_name'],
-                            directory= '.',
-                            token = user_token)
-           
-            # download index
-            script_util.unzip_files(self.__LOGGER, zip_fn, blast_dir)
-
-
-        self.__LOGGER.info( "Searching...")
-        #blast search
-        cmdstring="%s -p %s -i %s -m 7 -o %s -d %s -e %s" % (self.__BLAST_CMD, params['blast_program'], query_fn, self.__BLAST_OUT, target_fn, params['e-value'])
-
-        if 'gap_opening_penalty' in params:
-          cmdstring += " -G %s" %(params['gap_opening_penalty'])
-
-        if 'gap_extension_penalty' in params:
-          cmdstring += " -E %s" %(params['gap_extension_penalty'])
-
-        if 'nucleotide_match_reward' in params:
-          cmdstring += " -r %s" %(params['nucleotide_match_reward'])
-
-        if 'nucleotide_mismatch_penalty' in params:
-          cmdstring += " -q %s" %(params['nucleotide_mismatch_penalty'])
-
-        if 'word_size' in params:
-          cmdstring += " -W %s" %(params['word_size'])
-
-        if 'maximum_alignment_2show' in params:
-          cmdstring += " -b %s" %(params['maximum_alignment_2show'])
-
-        if 'substitution_matrix' in params and params['substitution_matrix'] != 'Default':
-          cmdstring += " -M %s" %(params['substitution_matrix'])
-
-        if 'mega_blast' in params:
-          cmdstring += " -n %s" %(params['mega_blast'])
-
-        if 'gapped_alignment' in params:
-          cmdstring += " -g %s" %(params['gapped_alignment'])
-
-        if 'filter_query_seq' in params:
-          cmdstring += " -F %s" %(params['filter_query_seq'])
-
-        if 'extending_hits' in params:
-          cmdstring += " -f %s" %(params['extending_hits'])
-
-        if 'maximum_seq_2show' in params:
-          cmdstring += " -v %s" %(params['maximum_seq_2show'])
-
-        # TODO: replace it to subprocess.Popen
-        #print cmdstring
-        os.system(cmdstring)
-        # TODO: Convert the following Perl script to python library code
-	os.system("xml2kbaseblastjson result.txt > blastoutput_new.json")
-	with open('blastoutput_new.json', 'r') as myfile:
-		res1 = json.load(myfile)
-
-        #os.remove(query_fn)
-      
-        #extract the blast output
-# res=script_util.extract_blast_output(self.__BLAST_OUT, anno=g2f)
+               if(self.__INDEX_TYPE[params['blast_program']]  == 'protein_db'):
+                   formatdb_type='T'
+               elif(self.__INDEX_TYPE[params['blast_program']]  == 'transcript_db'):
+                   formatdb_type='F'
+               else:
+                   self.__LOGGER.error("{0} is not yet supported".format(params['blast_program']))
+                   raise KBaseGenomeUtilException("{0} is not yet supported".format(params['blast_program']))
+               cmdstring="%s -i %s -p %s -o T" %(self.__INDEX_CMD, target_fn, formatdb_type)
+               # TODO: replace it to subprocess.Popen
+               os.system(cmdstring)
         
-#os.remove(self.__BLAST_OUT)
-#num_of_hits=len(res)
-	
-#metadata=[{'input_genomes':params['genome_ids'][0],'input_sequence':sequence,'number_of_hits':float(num_of_hits)}]
-
-	
-#res1={'hits' : res, 'info':metadata}
-
-	self.__LOGGER.info( "Finished!!!")
-	self.__LOGGER.debug( res1 )
-      
-
-	#store the BLAST output back into workspace
-        res= ws_client.save_objects(
-            {"workspace":params['ws_id'],
-            "objects": [{
-                "type":"GenomeUtil.BlastOutput",
-                "data":res1,
-                "name":params['output_name']}
-            ]})
+           else:
+               try:
+                   blast_indexes=ws_client.get_object_subset([{'name':params['blastindex_name'],
+                                                             'workspace': params['ws_id'], 
+                                                             'included':['handle', 'index_type']}])
+               except:
+                   self.__LOGGER.error("Couldn't find %s:%s from the workspace" %(params['ws_id'],params['blastindex_name']))
+                   raise KBaseGenomeUtilException("Couldn't find %s:%s from the workspace" %(params['ws_id'],params['genome_ids'][0]))
+                   
+               if len(blast_indexes) < 1:
+                   self.__LOGGER.error("Couldn't find %s:%s from the workspace" %(params['ws_id'],params['blastindex_name']))
+                   raise KBaseGenomeUtilException("Couldn't find %s:%s from the workspace" %(params['ws_id'],params['genome_ids'][0]))
         
-	#print res1
-        returnVal = res1
+               
+               # TODO: Add err handling
+               zip_fn = blast_indexes[0]['data']['handle']['file_name']
+               target_fn = "%s/%s" %(blast_dir, zip_fn[:-4]) # remove '.zip'
+        
+               if(self.__INDEX_TYPE[params['blast_program']]  == 'protein_db'):
+                   target_fn += '_aa.fa'
+                   if blast_indexes[0]['data']['index_type'] == 'none' or blast_indexes[0]['data']['index_type'] == "nucleotide":
+                       self.__LOGGER.error("The index object does not contain amino acid sequence indexes")
+                       raise KBaseGenomeUtilException("The index object does not contain amino acid sequence indexes")                    
+               elif(self.__INDEX_TYPE[params['blast_program']]  == 'transcript_db'):
+                   target_fn += '_nt.fa'
+                   if blast_indexes[0]['data']['index_type'] == 'none' or blast_indexes[0]['data']['index_type'] == "protein":
+                       self.__LOGGER.error("The index object does not contain nucleotide sequence indexes")
+                       raise KBaseGenomeUtilException("The index object does not contain nucleotide sequence indexes")                    
+               else:
+                   self.__LOGGER.error("{0} is not yet supported".format(params['blast_program']))
+                   raise KBaseGenomeUtilException("{0} is not yet supported".format(params['blast_program']))
+        
+               # TODO: Add err handling
+               zip_fn = blast_indexes[0]['data']['handle']['file_name']
+               #pprint(blast_indexes[0])
+              
+               self.__LOGGER.info("Downloading the genome index")
+               #hs = HandleService(url=self.__HS_URL, token=user_token)
+               try:
+                   script_util.download_file_from_shock(self.__LOGGER,
+                                   shock_service_url= blast_indexes[0]['data']['handle']['url'],
+                                   shock_id= blast_indexes[0]['data']['handle']['id'],
+                                   filename= blast_indexes[0]['data']['handle']['file_name'],
+                                   directory= '.',
+                                   token = user_token)
+               except Exception, e:
+                   self.__LOGGER.error("Downloading error from shock: Please contact help@kbase.us")
+                   raise KBaseGenomeUtilException("Downloading error from shock: Please contact help@kbase.us")
+               try:
+                   script_util.unzip_files(self.__LOGGER, zip_fn, blast_dir)
+               except Exception, e:
+                   self.__LOGGER.error("Unzip indexfile error: Please contact help@kbase.us")
+                   raise KBaseGenomeUtilException("Unzip indexfile error: Please contact help@kbase.us")
+        
+        
+           self.__LOGGER.info( "Searching...")
+           #blast search
+           cmdstring="%s -p %s -i %s -m 7 -o %s -d %s -e %s" % (self.__BLAST_CMD, params['blast_program'], query_fn, self.__BLAST_OUT, target_fn, params['e-value'])
+        
+           if 'gap_opening_penalty' in params:
+             cmdstring += " -G %s" %(params['gap_opening_penalty'])
+        
+           if 'gap_extension_penalty' in params:
+             cmdstring += " -E %s" %(params['gap_extension_penalty'])
+        
+           if 'nucleotide_match_reward' in params:
+             cmdstring += " -r %s" %(params['nucleotide_match_reward'])
+        
+           if 'nucleotide_mismatch_penalty' in params:
+             cmdstring += " -q %s" %(params['nucleotide_mismatch_penalty'])
+        
+           if 'word_size' in params:
+             cmdstring += " -W %s" %(params['word_size'])
+        
+           if 'maximum_alignment_2show' in params:
+             cmdstring += " -b %s" %(params['maximum_alignment_2show'])
+        
+           if 'substitution_matrix' in params and params['substitution_matrix'] != 'Default':
+             cmdstring += " -M %s" %(params['substitution_matrix'])
+        
+           if 'mega_blast' in params:
+             cmdstring += " -n %s" %(params['mega_blast'])
+        
+           if 'gapped_alignment' in params:
+             cmdstring += " -g %s" %(params['gapped_alignment'])
+        
+           if 'filter_query_seq' in params:
+             cmdstring += " -F %s" %(params['filter_query_seq'])
+        
+           if 'extending_hits' in params:
+             cmdstring += " -f %s" %(params['extending_hits'])
+        
+           if 'maximum_seq_2show' in params:
+             cmdstring += " -v %s" %(params['maximum_seq_2show'])
+        
+           # TODO: replace it to subprocess.Popen
+           #print cmdstring
+           try: 
+               os.system(cmdstring)
+               # TODO: Convert the following Perl script to python library code
+               os.system("xml2kbaseblastjson result.txt > blastoutput_new.json")
+               with open('blastoutput_new.json', 'r') as myfile:
+                 	res1 = json.load(myfile)
+           except Exception,e:
+               self.__LOGGER.error("Search execution error: Please contact help@kbase.us")
+               raise KBaseGenomeUtilException("Search execution error: Please contact help@kbase.us")
+        
+           #os.remove(query_fn)
+         
+           #extract the blast output
+           # res=script_util.extract_blast_output(self.__BLAST_OUT, anno=g2f)
+           
+           #os.remove(self.__BLAST_OUT)
+           #num_of_hits=len(res)
+           
+           #metadata=[{'input_genomes':params['genome_ids'][0],'input_sequence':sequence,'number_of_hits':float(num_of_hits)}]
+ 
+           
+           #res1={'hits' : res, 'info':metadata}
+ 
+           self.__LOGGER.info( "Finished!!!")
+           self.__LOGGER.debug( res1 )
+          
+ 
+           #store the BLAST output back into workspace
+           res= ws_client.save_objects(
+               {"workspace":params['ws_id'],
+               "objects": [{
+                   "type":"GenomeUtil.BlastOutput",
+                   "data":res1,
+                   "name":params['output_name']}
+               ]})
+           
+           #print res1
+        except KBaseGenomeUtilException, e:
+           global no_rst
+           res1 = json.loads(no_rst)
+           res1['err_msg'] = str(e)
+           res= ws_client.save_objects(
+               {"workspace":params['ws_id'],
+               "objects": [{
+                   "type":"GenomeUtil.BlastOutput",
+                   "data":res1,
+                   "meta":{"err_msg": str(e)},
+                   "name":params['output_name']}
+               ]})
+        except Exception, e:
+           res1 = json.loads(no_rst)
+           res1['err_msg'] = 'Contact help@kbase.us with the following messages: ' + str(e)
+           res= ws_client.save_objects(
+               {"workspace":params['ws_id'],
+               "objects": [{
+                   "type":"GenomeUtil.BlastOutput",
+                   "data":res1,
+                   "meta":{"err_msg": str(e)},
+                   "name":params['output_name']}
+               ]})
+        finally:
+           if not isinstance(res1, dict):
+               res1 = json.loads(no_rst)
+               res1['err_msg'] = 'Unable to store even the error message to workspace'
+           returnVal = res1
         #END blast_against_genome
 
         # At some point might do deeper type checking...

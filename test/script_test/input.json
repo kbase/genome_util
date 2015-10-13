@@ -1,9 +1,20 @@
 {
 	"version":"1.1",
-	"method":"KBaseGenomeUtil.index_genomes",
+	"method":"KBaseGenomeUtil.blast_against_genome",
 	"context":null,
 	"params":[
-{"genome_ids": ["Rhodobacter_sphaeroides_2.4.1_"], "index_program" : "formatdb", "blastindex_name": "rsphaeroides_index", "description" : "test_index", "ws_id": "pranjan77:1442854662472"}
+		{
+			"query":"QLREKTGDKKIIFSPEFLREGHALYDNLHPSRIVVGAPTDDAEAVKAA",
+			"blastindex_name":"rsphaeroides_index",
+			"e-value": "1",
+			"coverage":"0.00000000005",
+			"identity":"0.00000003",
+			"score":"50000000000000",
+			"blast_program":"blastp",
+			"ws_id":"pranjan77:1442854662472",
+			"output_name":"test_BLASToutput3"
+		
+		}
 	]
 
 
