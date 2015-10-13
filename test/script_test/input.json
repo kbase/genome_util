@@ -1,16 +1,9 @@
 {
 	"version":"1.1",
-	"method":"KBaseGenomeUtil.filter_BlastOutput",
+	"method":"KBaseGenomeUtil.index_genomes",
 	"context":null,
 	"params":[
-		{
-			"entries":"3",
-			"evalue": "1E-8",
-			"out_id":"test_BLASToutput_FS",
-			"ws_id":"kbasetest:1437674347386",
-			"in_id":"test_BLASToutput_DNA"
-		
-		}
+{"genome_ids": ["Rhodobacter_sphaeroides_2.4.1_"], "index_program" : "formatdb", "blastindex_name": "rsphaeroides_index", "description" : "test_index", "ws_id": "pranjan77:1442854662472"}
 	]
 
 
