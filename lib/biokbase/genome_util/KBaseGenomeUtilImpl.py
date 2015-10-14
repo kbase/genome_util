@@ -288,7 +288,7 @@ class KBaseGenomeUtil:
                
             if have_nt_seq :
                 try:
-                    cmdstring="%s -i %s -p N" %(self.__INDEX_CMD, target_nt_fn)
+                    cmdstring="%s -i %s -p F" %(self.__INDEX_CMD, target_nt_fn)
                     # TODO: replace it to subprocess.Popen
                     tool_process = subprocess.Popen(cmdstring, stderr=subprocess.PIPE, shell=True)
                     stdout, stderr = tool_process.communicate()
