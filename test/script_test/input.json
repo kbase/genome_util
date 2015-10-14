@@ -3,7 +3,9 @@
 	"method":"KBaseGenomeUtil.index_genomes",
 	"context":null,
 	"params":[
-{"genome_ids": ["Ptrichocarpa_genome_v3", "Arabidopsis_thaliana", "Sbicolor.JGI-v2.1"], "index_program" : "formatdb", "blastindex_name": "three_genomes", "description" : "test_index", "ws_id": "sunita:1443373752736"}
+{"genome_ids": 
+["Ptrichocarpa_genome_v3", "Arabidopsis_thaliana", "Sbicolor.JGI-v2.1","Ptrichocarpa_genome_v3", "Arabidopsis_thaliana", "Sbicolor.JGI-v2.1","Ptrichocarpa_genome_v3", "Arabidopsis_thaliana", "Sbicolor.JGI-v2.1","Ptrichocarpa_genome_v3", "Arabidopsis_thaliana", "Sbicolor.JGI-v2.1", "Ptrichocarpa_genome_v3", "Arabidopsis_thaliana", "Sbicolor.JGI-v2.1","Ptrichocarpa_genome_v3", "Arabidopsis_thaliana", "Sbicolor.JGI-v2.1","Ptrichocarpa_genome_v3", "Arabidopsis_thaliana", "Sbicolor.JGI-v2.1","Ptrichocarpa_genome_v3", "Arabidopsis_thaliana", "Sbicolor.JGI-v2.1", "Ptrichocarpa_genome_v3", "Arabidopsis_thaliana", "Sbicolor.JGI-v2.1","Ptrichocarpa_genome_v3", "Arabidopsis_thaliana", "Sbicolor.JGI-v2.1","Ptrichocarpa_genome_v3", "Arabidopsis_thaliana", "Sbicolor.JGI-v2.1","Ptrichocarpa_genome_v3", "Arabidopsis_thaliana", "Sbicolor.JGI-v2.1", "Ptrichocarpa_genome_v3", "Arabidopsis_thaliana", "Sbicolor.JGI-v2.1","Ptrichocarpa_genome_v3", "Arabidopsis_thaliana", "Sbicolor.JGI-v2.1","Ptrichocarpa_genome_v3", "Arabidopsis_thaliana", "Sbicolor.JGI-v2.1","Ptrichocarpa_genome_v3", "Arabidopsis_thaliana", "Sbicolor.JGI-v2.1"], 
+"index_program" : "formatdb", "blastindex_name": "GI-48-genomes", "description" : "test_index", "ws_id": "sunita:1443373752736"}
 	]
 
 
