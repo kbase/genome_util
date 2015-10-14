@@ -3,7 +3,7 @@
 	"method":"KBaseGenomeUtil.index_genomes",
 	"context":null,
 	"params":[
-{"genome_ids": ["kbase_genome_220"], "index_program" : "formatdb", "blastindex_name": "rsphaeroides_index", "description" : "test_index", "ws_id": "gu_test"}
+{"genome_ids": ["Rhodobacter_sphaeroides_2.4.1"], "index_program" : "formatdb", "blastindex_name": "rsphaeroides_index", "description" : "test_index", "ws_id": "pranjan77:1442854662472"}
 	]
 
 

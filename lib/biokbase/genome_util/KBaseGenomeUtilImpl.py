@@ -184,6 +184,11 @@ class KBaseGenomeUtil:
         # ctx is the context object
         # return variables are: returnVal
         #BEGIN index_genomes
+        user_token=ctx['token']
+        svc_token = Token(user_id=self.__SVC_USER, password=self.__SVC_PASS).token
+        ws_client=Workspace(url=self.__WS_URL, token=user_token)
+        hs = HandleService(url=self.__HS_URL, token=user_token)
+        gs = {'elements' : {}}
         try:
             self.__LOGGER.info( "Preparing Target FA")
          
@@ -193,9 +198,6 @@ class KBaseGenomeUtil:
                 for f in files: os.remove(f)
             if not os.path.exists(blast_dir): os.makedirs(blast_dir)
           
-            user_token=ctx['token']
-            svc_token = Token(user_id=self.__SVC_USER, password=self.__SVC_PASS).token
-            ws_client=Workspace(url=self.__WS_URL, token=user_token)
          
                
             target_nt_fn = "%s/%s_nt.fa" %( blast_dir, params['blastindex_name'])
@@ -212,7 +214,6 @@ class KBaseGenomeUtil:
             have_aa_seq = False
          
          
-            gs = {'elements' : {}}
          
             # Iterate one at a time to cope with main memory limit for euk genomes
             for genome_id in params['genome_ids']: 
@@ -331,7 +332,6 @@ class KBaseGenomeUtil:
                 raise KBaseGenomeUtilException("Failed to compress the index: %s" %(e))
                
             try: 
-                hs = HandleService(url=self.__HS_URL, token=user_token)
                 handle = hs.upload("%s.zip" % (params['blastindex_name']))
             except Exception, e:
                 raise KBaseGenomeUtilException("Failed to upload the index: %s" %(e))
@@ -341,6 +341,7 @@ class KBaseGenomeUtil:
          
             if index_type == 'none': 
                 err_msg = 'No sequences were indexed'
+                bi['description'] = err_msg
                 res= ws_client.save_objects(
                     {"workspace":params['ws_id'],
                     "objects": [{
@@ -361,9 +362,34 @@ class KBaseGenomeUtil:
             if index_type == 'none':
                 returnVal['err_msg'] = err_msg
         except MemoryError, e:
-            returnVal = {'err_msg' : 'Not enough main memory: please use smaller number of genomes only' }
+            handle = hs.new_handle()
+            bi = {'handle' : handle, 'genome_set' : gs, 'index_type' : 'none', 'index_program' : params['index_program']}
+            err_msg = 'Not enough main memory: please use smaller number of genomes only'
+            bi['description'] = err_msg
+            returnVal = {'err_msg' : err_msg }
+            res= ws_client.save_objects(
+                {"workspace":params['ws_id'],
+                "objects": [{
+                    "type":"GenomeUtil.BlastIndex",
+                    "data":bi,
+                    "meta" : {'err_msg' : err_msg},
+                    "name":params['blastindex_name']}
+                ]})
+            
         except Exception, e:
-            returnVal = {'err_msg' : str(e)}
+            handle = hs.new_handle()
+            bi = {'handle' : handle, 'genome_set' : gs, 'index_type' : 'none', 'index_program' : params['index_program']}
+            err_msg = str(e)
+            bi['description'] = err_msg
+            returnVal = {'err_msg' : err_msg }
+            res= ws_client.save_objects(
+                {"workspace":params['ws_id'],
+                "objects": [{
+                    "type":"GenomeUtil.BlastIndex",
+                    "data":bi,
+                    "meta" : {'err_msg' : err_msg},
+                    "name":params['blastindex_name']}
+                ]})
         
         #END index_genomes
 
