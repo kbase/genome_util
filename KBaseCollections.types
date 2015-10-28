@@ -1,0 +1,77 @@
+#include <KBaseGenomes.types>
+#include <KBaseFBA.types>
+
+module KBaseCollections {
+    /*
+        @id ws KBaseGenomes.Genome
+    */
+    typedef string genome_ref;
+    typedef string genome_id;
+    typedef string feature_id;
+
+    /*
+        @id ws KBase.FBAModel
+    */
+    typedef string fbamodel_ref;
+    typedef string fbamodel_id;
+
+    /*
+        @optional description
+        @optional element_ordering
+    */
+    typedef structure {
+        string description;
+        list<feature_id> element_ordering;
+        mapping<feature_id, list<genome_ref>> elements;
+    } FeatureSet;
+
+
+    /*
+        @optional description
+    */
+    typedef structure {
+        string description;
+        list<tuple<feature_id, genome_ref>> elements;
+    } FeatureList;
+
+
+    /*
+        @optional description
+        @optional element_ordering
+    */
+    typedef structure {
+        string description;
+        list<genome_id> element_ordering;
+        mapping<genome_id, list<genome_ref>> elements;
+    } GenomeSet;
+
+
+    /*
+        @optional description
+    */
+    typedef structure {
+        string description;
+        list<genome_ref> elements;
+    } GenomeList;
+
+
+    /*
+        @optional description
+        @optional element_ordering
+    */
+    typedef structure {
+        string description;
+        list<fbamodel_id> element_ordering;
+        mapping<fbamodel_id, list<fbamodel_ref>> elements;
+    } FBAModelSet;
+
+
+    /*
+        @optional description
+    */
+    typedef structure {
+        string description;
+        list<fbamodel_ref> elements;
+    } FBAModelList;
+};
+
