@@ -619,8 +619,8 @@ class KBaseGenomeUtil:
 
            if 'target_seqs' in params:
                res1['BlastOutput_db'] = 'OnTheFlyDB'
-           else
-               res1['BlastOutput_db'] = "%s/%s", (params['ws_id'],params['blastindex_name'])
+           else:
+               res1['BlastOutput_db'] = "%s/%s" %(params['ws_id'],params['blastindex_name'])
  
            self.__LOGGER.info( "Finished!!!")
            self.__LOGGER.debug( res1 )
