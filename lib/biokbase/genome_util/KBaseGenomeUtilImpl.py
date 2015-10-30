@@ -351,11 +351,15 @@ class KBaseGenomeUtil:
                         "name":params['blastindex_name']}
                     ]})
             else:
+                warning_msg = ''
+                warning_msg = 'The index object does not contain nucleotide sequence indexes. This index will only work with blastp (protein query, protein index) and blastx(nucleotide query, protein index)' if index_type == 'protein'
+                warning_msg = 'The index object does not contain  amino acid sequence indexes. This index will only work with blastn (nucleotide query, nucleotide index), tblastx(protein query, nucleotide index) and tblastx(nucleotide query, nucleotide index)' if index_type == 'nucleotide'
                 res= ws_client.save_objects(
                     {"workspace":params['ws_id'],
                     "objects": [{
                         "type":"GenomeUtil.BlastIndex",
                         "data":bi,
+                        "meta" : {'warning_msg' : warning_msg},
                         "name":params['blastindex_name']}
                     ]})
             returnVal = { 'blastindex_ref' : "%s/%s" % (params['ws_id'], params['blastindex_name']) }
