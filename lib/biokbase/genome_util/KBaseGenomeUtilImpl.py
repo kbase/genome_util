@@ -497,12 +497,12 @@ class KBaseGenomeUtil:
                    target_fn += '_aa.fa'
                    if blast_indexes[0]['data']['index_type'] == 'none' or blast_indexes[0]['data']['index_type'] == "nucleotide":
                        self.__LOGGER.error("The index object does not contain amino acid sequence indexes")
-                       raise KBaseGenomeUtilException("The index object does not contain amino acid sequence indexes")                    
+                       raise KBaseGenomeUtilException("The index object does not contain  amino acid sequence indexes. This index will only work with blastn (nucleotide query, nucleotide index), tblastx(protein query, nucleotide index) and tblastx(nucleotide query, nucleotide index)")
                elif(self.__INDEX_TYPE[params['blast_program']]  == 'transcript_db'):
                    target_fn += '_nt.fa'
                    if blast_indexes[0]['data']['index_type'] == 'none' or blast_indexes[0]['data']['index_type'] == "protein":
                        self.__LOGGER.error("The index object does not contain nucleotide sequence indexes")
-                       raise KBaseGenomeUtilException("The index object does not contain nucleotide sequence indexes")                    
+                       raise KBaseGenomeUtilException("The index object does not contain nucleotide sequence indexes. This index will only work with blastp (protein query, protein index) and blastx(nucleotide query, protein index)")                    
                else:
                    self.__LOGGER.error("{0} is not yet supported".format(params['blast_program']))
                    raise KBaseGenomeUtilException("{0} is not yet supported".format(params['blast_program']))
