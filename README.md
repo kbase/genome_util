@@ -17,22 +17,14 @@ Examples of tools that will be developed in this module:
 4) Functional comparison between two genomes
 
 
+Testing
+===========================
+1) provide user name and password in test/test.cfg
+
+2) login as kbasetest
+
+3) make test
 
 
 
 
-Notes for development:
-============
-
-1) Delete the PATHONPATH in the 'bin/run_KBaseGenomeUtil.sh'
-
-2) . /kb/dev_container/user-env.sh
-
-3) export PYTHONPATH='kb/deployment/lib'
-
-4) insert 'token=token.rstrip()' in line526 within lib/biokbase/genome_util/KBaseGenomeUtil.py
-
-5) make deploy
-
-
-6) testing the command:  ./bin/run_KBaseGenomeUtil.sh test/script_test/input.json output.txt /mnt/project/mytoken.txt
